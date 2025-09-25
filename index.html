@@ -149,90 +149,89 @@
         }
         body.focus-active .widget-in-focus { opacity: 1; filter: blur(0); transform: scale(1.03); z-index: 45; position: relative; }
         #exit-focus-btn { transition: opacity 0.3s, transform 0.3s; }
-        .studi-logo { fill: var(--logo-color); }
     </style>
 </head>
 <body class="selection-accent">
     <!-- Logo -->
-    <div class="fixed top-6 left-6 z-50 flex items-center gap-3 top-left-logo">
-   <img src="logo1.png" alt="Studi Logo" class="h-16 w-16 rounded-full object-cover">
-</div>
+    <div class="fixed top-4 left-4 md:top-6 md:left-6 z-50 flex items-center gap-3 top-left-logo">
+       <img src="logo.png" alt="Studi Logo" class="h-12 w-12 md:h-16 md:w-16 rounded-full object-cover">
+    </div>
 
-    <main class="min-h-screen w-full p-4 md:p-8 flex items-center justify-center">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-7xl">
+    <main class="min-h-screen w-full p-4 md:p-6 flex items-center justify-center">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full max-w-7xl">
 
             <!-- Clock & Date Widget -->
-            <div id="clock-widget" class="glass-panel non-focus-widget p-6 flex flex-col justify-center items-center md:col-span-2 lg:col-span-2">
+            <div id="clock-widget" class="glass-panel non-focus-widget p-4 md:p-6 flex flex-col justify-center items-center md:col-span-2 lg:col-span-2">
                 <div id="time-display-container" class="w-full">
-                     <h1 id="time-display-normal" class="text-6xl md:text-8xl font-bold tracking-tight flex items-baseline justify-center">00:00:00</h1>
+                     <h1 id="time-display-normal" class="text-5xl sm:text-6xl md:text-8xl font-bold tracking-tight flex items-baseline justify-center">00:00:00</h1>
                 </div>
-                <p id="date-display" class="text-lg md:text-xl mt-2" style="color: var(--text-muted-color);">Thursday, 25 September 2025</p>
+                <p id="date-display" class="text-sm text-center md:text-xl mt-2" style="color: var(--text-muted-color);">Thursday, 25 September 2025</p>
             </div>
 
             <!-- Timer Widget -->
-            <div id="timer-widget" class="glass-panel widget-in-focus p-6 md:col-span-2 lg:col-span-2">
+            <div id="timer-widget" class="glass-panel widget-in-focus p-4 md:p-6 md:col-span-2 lg:col-span-2">
                 <div class="flex border-b mb-4" style="border-color: rgba(128,128,128, 0.2)">
-                    <button id="countdown-tab" class="timer-tab flex-1 pb-2 border-b-2 accent-border accent-text font-semibold">Countdown</button>
-                    <button id="pomodoro-tab" class="timer-tab flex-1 pb-2 border-b-2 border-transparent font-semibold" style="color: var(--text-muted-color);">Pomodoro</button>
-                    <button id="stopwatch-tab" class="timer-tab flex-1 pb-2 border-b-2 border-transparent font-semibold" style="color: var(--text-muted-color);">Stopwatch</button>
+                    <button id="countdown-tab" class="timer-tab flex-1 pb-2 text-sm sm:text-base border-b-2 accent-border accent-text font-semibold">Countdown</button>
+                    <button id="pomodoro-tab" class="timer-tab flex-1 pb-2 text-sm sm:text-base border-b-2 border-transparent font-semibold" style="color: var(--text-muted-color);">Pomodoro</button>
+                    <button id="stopwatch-tab" class="timer-tab flex-1 pb-2 text-sm sm:text-base border-b-2 border-transparent font-semibold" style="color: var(--text-muted-color);">Stopwatch</button>
                 </div>
                 <!-- Countdown View -->
                 <div id="countdown-view">
-                     <div class="flex justify-center items-center gap-2 md:gap-4 mb-4">
-                        <input id="hours" type="number" min="0" placeholder="HH" class="styled-input w-20 h-20 text-4xl text-center rounded-lg"><span class="text-4xl">:</span>
-                        <input id="minutes" type="number" min="0" max="59" placeholder="MM" class="styled-input w-20 h-20 text-4xl text-center rounded-lg"><span class="text-4xl">:</span>
-                        <input id="seconds" type="number" min="0" max="59" placeholder="SS" class="styled-input w-20 h-20 text-4xl text-center rounded-lg">
+                     <div class="flex justify-center items-center gap-1 sm:gap-2 md:gap-4 mb-4">
+                        <input id="hours" type="number" min="0" placeholder="HH" class="styled-input w-16 h-16 text-2xl sm:w-20 sm:h-20 sm:text-4xl text-center rounded-lg"><span class="text-2xl sm:text-4xl">:</span>
+                        <input id="minutes" type="number" min="0" max="59" placeholder="MM" class="styled-input w-16 h-16 text-2xl sm:w-20 sm:h-20 sm:text-4xl text-center rounded-lg"><span class="text-2xl sm:text-4xl">:</span>
+                        <input id="seconds" type="number" min="0" max="59" placeholder="SS" class="styled-input w-16 h-16 text-2xl sm:w-20 sm:h-20 sm:text-4xl text-center rounded-lg">
                     </div>
-                    <div class="flex justify-center gap-4">
-                        <button id="start-timer" class="accent-bg accent-bg-hover transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-play"></i> Start</button>
-                        <button id="pause-timer" class="bg-slate-600 hover:bg-slate-700 transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-pause"></i> Pause</button>
-                        <button id="reset-timer" class="bg-rose-600 hover:bg-rose-700 transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-arrow-counter-clockwise"></i> Reset</button>
+                    <div class="flex flex-wrap justify-center gap-2">
+                        <button id="start-timer" class="accent-bg accent-bg-hover transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-play"></i> Start</button>
+                        <button id="pause-timer" class="bg-slate-600 hover:bg-slate-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-pause"></i> Pause</button>
+                        <button id="reset-timer" class="bg-rose-600 hover:bg-rose-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-arrow-counter-clockwise"></i> Reset</button>
                     </div>
                 </div>
                 <!-- Pomodoro View -->
                 <div id="pomodoro-view" class="hidden text-center">
-                    <p id="pomodoro-status" class="text-2xl font-semibold mb-2 accent-text">Focus</p>
-                    <p id="pomodoro-time" class="text-7xl font-bold mb-4">25:00</p>
-                     <div class="flex justify-center gap-4">
-                        <button id="pomodoro-start" class="accent-bg accent-bg-hover transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-play"></i> Start</button>
-                         <button id="pomodoro-pause" class="bg-slate-600 hover:bg-slate-700 transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-pause"></i> Pause</button>
-                        <button id="pomodoro-reset" class="bg-rose-600 hover:bg-rose-700 transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-skip-forward"></i> Skip</button>
+                    <p id="pomodoro-status" class="text-xl sm:text-2xl font-semibold mb-2 accent-text">Focus</p>
+                    <p id="pomodoro-time" class="text-6xl md:text-7xl font-bold mb-4">25:00</p>
+                     <div class="flex flex-wrap justify-center gap-2">
+                        <button id="pomodoro-start" class="accent-bg accent-bg-hover transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-play"></i> Start</button>
+                         <button id="pomodoro-pause" class="bg-slate-600 hover:bg-slate-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-pause"></i> Pause</button>
+                        <button id="pomodoro-reset" class="bg-rose-600 hover:bg-rose-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-skip-forward"></i> Skip</button>
                     </div>
                 </div>
                 <!-- Stopwatch View -->
                 <div id="stopwatch-view" class="hidden text-center">
-                    <p id="stopwatch-time" class="text-7xl font-bold font-mono mb-4 tracking-tight">00:00:00</p>
-                    <div class="flex justify-center gap-4">
-                        <button id="stopwatch-start" class="accent-bg accent-bg-hover transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-play"></i> Start</button>
-                        <button id="stopwatch-pause" class="bg-slate-600 hover:bg-slate-700 transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-pause"></i> Pause</button>
-                        <button id="stopwatch-reset" class="bg-rose-600 hover:bg-rose-700 transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-arrow-counter-clockwise"></i> Reset</button>
+                    <p id="stopwatch-time" class="text-5xl sm:text-6xl md:text-7xl font-bold font-mono mb-4 tracking-tight">00:00:00</p>
+                    <div class="flex flex-wrap justify-center gap-2">
+                        <button id="stopwatch-start" class="accent-bg accent-bg-hover transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-play"></i> Start</button>
+                        <button id="stopwatch-pause" class="bg-slate-600 hover:bg-slate-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-pause"></i> Pause</button>
+                        <button id="stopwatch-reset" class="bg-rose-600 hover:bg-rose-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-arrow-counter-clockwise"></i> Reset</button>
                     </div>
                 </div>
             </div>
 
             <!-- Quick Tasks Widget -->
-            <div id="tasks-widget" class="glass-panel widget-in-focus p-6 flex flex-col md:col-span-2 lg:col-span-2 min-h-[250px]">
+            <div id="tasks-widget" class="glass-panel widget-in-focus p-4 md:p-6 flex flex-col md:col-span-2 lg:col-span-2 min-h-[250px]">
                 <div class="flex justify-between items-center mb-4 border-b pb-2" style="border-color: rgba(128,128,128, 0.2)">
-                    <h2 class="text-xl font-bold">Quick Tasks</h2>
+                    <h2 class="text-lg sm:text-xl font-bold">Quick Tasks</h2>
                     <button id="share-tasks-btn" title="Share Tasks" class="p-2 rounded-full hover:bg-slate-500/50 transition-colors"><i class="ph-bold ph-share-network text-xl"></i></button>
                 </div>
                 <div class="flex gap-2 mb-4">
-                    <input type="text" id="task-input" class="styled-input w-full px-3 py-2 rounded-lg" placeholder="Add a new task...">
+                    <input type="text" id="task-input" class="styled-input w-full px-3 py-2 rounded-lg text-sm sm:text-base" placeholder="Add a new task...">
                     <button id="add-task-btn" class="accent-bg accent-bg-hover transition-colors px-4 py-2 rounded-lg font-semibold"><i class="ph ph-plus"></i></button>
                 </div>
                 <ul id="task-list" class="space-y-2 overflow-y-auto flex-grow"></ul>
             </div>
 
             <!-- ANIMATED Music Player Widget -->
-            <div class="glass-panel non-focus-widget p-6 flex flex-col justify-center items-center text-center relative overflow-hidden">
+            <div class="glass-panel non-focus-widget p-4 md:p-6 flex flex-col justify-center items-center text-center relative overflow-hidden">
                 <div id="music-options" class="w-full h-full flex flex-col justify-center items-center text-center transition-transform duration-500 ease-in-out">
-                    <i class="ph-fill ph-music-notes text-5xl mb-3 accent-text"></i>
-                    <h3 class="text-lg font-semibold mb-2">Study Music</h3>
-                    <p class="text-sm flex-grow" style="color: var(--text-muted-color);">Open a playlist in a new tab.</p>
-                    <div class="w-full space-y-3">
-                         <a href="https://open.spotify.com/playlist/37i9dQZF1DWWQRwui02bsd" data-service="spotify" class="music-link w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 transition-colors px-4 py-2 rounded-lg font-semibold text-white">
+                    <i class="ph-fill ph-music-notes text-4xl sm:text-5xl mb-3 accent-text"></i>
+                    <h3 class="text-base sm:text-lg font-semibold mb-2">Study Music</h3>
+                    <p class="text-xs sm:text-sm flex-grow" style="color: var(--text-muted-color);">Open a playlist in a new tab.</p>
+                    <div class="w-full space-y-2 sm:space-y-3 mt-2">
+                         <a href="https://open.spotify.com/playlist/37i9dQZF1DWWQRwui02bsd" data-service="spotify" class="music-link w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 transition-colors px-4 py-2 rounded-lg font-semibold text-white text-sm sm:text-base">
                             <i class="ph-fill ph-spotify-logo"></i> Spotify</a>
-                         <a href="https://www.youtube.com/watch?v=jfKfPfyJRdk" data-service="youtube" class="music-link w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 transition-colors px-4 py-2 rounded-lg font-semibold text-white">
+                         <a href="https://www.youtube.com/watch?v=jfKfPfyJRdk" data-service="youtube" class="music-link w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 transition-colors px-4 py-2 rounded-lg font-semibold text-white text-sm sm:text-base">
                             <i class="ph-fill ph-youtube-logo"></i> YouTube</a>
                     </div>
                 </div>
@@ -245,11 +244,11 @@
             </div>
 
             <!-- Background Uploader Widget -->
-            <div class="glass-panel non-focus-widget p-6 flex flex-col justify-center items-center text-center">
-                 <i class="ph-fill ph-image text-5xl mb-3 accent-text"></i>
-                <h3 class="text-lg font-semibold mb-2">Change BG</h3>
-                <p class="text-sm flex-grow" style="color: var(--text-muted-color);">Personalize your dashboard.</p>
-                <label for="background-uploader" class="cursor-pointer w-full bg-slate-600 hover:bg-slate-700 transition-colors px-6 py-2 rounded-lg font-semibold text-white">Upload Image</label>
+            <div class="glass-panel non-focus-widget p-4 md:p-6 flex flex-col justify-center items-center text-center">
+                 <i class="ph-fill ph-image text-4xl sm:text-5xl mb-3 accent-text"></i>
+                <h3 class="text-base sm:text-lg font-semibold mb-2">Change BG</h3>
+                <p class="text-xs sm:text-sm flex-grow" style="color: var(--text-muted-color);">Personalize your dashboard.</p>
+                <label for="background-uploader" class="cursor-pointer w-full bg-slate-600 hover:bg-slate-700 transition-colors px-4 py-2 mt-2 rounded-lg font-semibold text-white text-sm sm:text-base">Upload Image</label>
                 <input type="file" id="background-uploader" class="hidden" accept="image/*">
             </div>
 
@@ -258,27 +257,27 @@
 
     <div id="focus-overlay" class="pointer-events-none fixed inset-0 z-40 bg-black/70 opacity-0"></div>
     
-    <button id="exit-focus-btn" class="hidden fixed top-6 right-6 z-50 accent-bg accent-bg-hover px-4 py-2 rounded-lg font-semibold text-lg flex items-center gap-2" title="Exit Focus Mode">
+    <button id="exit-focus-btn" class="hidden fixed top-4 right-4 md:top-6 md:right-6 z-50 accent-bg accent-bg-hover px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-semibold text-base md:text-lg flex items-center gap-2" title="Exit Focus Mode">
         <i class="ph ph-x"></i> Exit Focus
     </button>
 
 
     <!-- Settings & Fullscreen Buttons -->
-    <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 bottom-right-controls">
-        <button id="focus-mode-btn" class="glass-panel p-3 rounded-full hover:bg-slate-500/50 transition-colors" title="Toggle Focus Mode">
-            <i class="ph-bold ph-crosshair text-2xl block leading-none"></i>
+    <div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 md:gap-3 bottom-right-controls">
+        <button id="focus-mode-btn" class="glass-panel p-2 md:p-3 rounded-full hover:bg-slate-500/50 transition-colors" title="Toggle Focus Mode">
+            <i class="ph-bold ph-crosshair text-xl md:text-2xl block leading-none"></i>
         </button>
-        <button id="settings-btn" class="glass-panel p-3 rounded-full hover:bg-slate-500/50 transition-colors" title="Settings">
-            <i class="ph-bold ph-gear text-2xl block leading-none"></i>
+        <button id="settings-btn" class="glass-panel p-2 md:p-3 rounded-full hover:bg-slate-500/50 transition-colors" title="Settings">
+            <i class="ph-bold ph-gear text-xl md:text-2xl block leading-none"></i>
         </button>
-        <button id="fullscreen-btn" class="glass-panel p-3 rounded-full hover:bg-slate-500/50 transition-colors" title="Toggle Fullscreen">
-            <i id="fullscreen-icon" class="ph-bold ph-arrows-out text-2xl block leading-none"></i>
+        <button id="fullscreen-btn" class="glass-panel p-2 md:p-3 rounded-full hover:bg-slate-500/50 transition-colors" title="Toggle Fullscreen">
+            <i id="fullscreen-icon" class="ph-bold ph-arrows-out text-xl md:text-2xl block leading-none"></i>
         </button>
     </div>
 
     <!-- Settings Panel -->
     <div id="settings-panel" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="glass-panel w-full max-w-md p-6 rounded-2xl">
+        <div class="glass-panel w-full max-w-sm sm:max-w-md p-6 rounded-2xl">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold">Settings</h2>
                 <button id="close-settings-btn" class="p-1 rounded-full hover:bg-slate-500/50"><i class="ph-bold ph-x text-xl"></i></button>
@@ -452,7 +451,7 @@
                     initFlipClock();
                     clockInterval = setInterval(updateFlipClock, 1000);
                 } else {
-                    timeDisplayContainer.innerHTML = `<h1 id="time-display-normal" class="text-6xl md:text-8xl font-bold tracking-tight flex items-baseline justify-center">00:00:00</h1>`;
+                    timeDisplayContainer.innerHTML = `<h1 id="time-display-normal" class="text-5xl sm:text-6xl md:text-8xl font-bold tracking-tight flex items-baseline justify-center">00:00:00</h1>`;
                     updateNormalClock(); // Update immediately
                     clockInterval = setInterval(updateNormalClock, 1000);
                 }
@@ -467,10 +466,10 @@
                 let timeString = now.toLocaleTimeString('en-US', timeOptions);
 
                 if (settings.is24Hour) {
-                    timeDisplay.innerHTML = timeString;
+                    timeDisplay.innerHTML = timeString.split(' ')[0];
                 } else {
                     const parts = timeString.split(' ');
-                    timeDisplay.innerHTML = `${parts[0]} <span class="text-3xl md:text-5xl font-medium tracking-normal" style="color: var(--text-muted-color);">${parts[1]}</span>`;
+                    timeDisplay.innerHTML = `${parts[0]} <span class="text-2xl sm:text-3xl md:text-5xl font-medium tracking-normal" style="color: var(--text-muted-color);">${parts[1]}</span>`;
                 }
                 
                 if (settings.clockStyle === 'pulse' && !timeDisplay.classList.contains('clock-pulse')) {
@@ -807,4 +806,3 @@
     </script>
 </body>
 </html>
-
