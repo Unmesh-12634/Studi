@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studi</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="logo.png" type="image/png">
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Tone.js for sound -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    
+    <!-- QR Code Generator -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        :root {
+            --accent-color: #06b6d4; /* cyan-500 */
+            --accent-color-hover: #0891b2; /* cyan-600 */
+
+            /* --- Theme Variables --- */
+            --bg-color: #0f172a; /* slate-900 */
+            --text-color: #ffffff;
+            --text-muted-color: #cbd5e1; /* slate-300 */
+            --panel-bg: rgba(30, 41, 59, 0.3);
+            --panel-border: rgba(255, 255, 255, 0.18);
+            --input-bg: rgba(0, 0, 0, 0.3);
+            --input-border: rgba(255, 255, 255, 0.2);
+            --flip-card-top-bg: #2c3e50;
+            --flip-card-bottom-bg: #34495e;
+            --flip-card-border: rgba(0,0,0,0.4);
+            --logo-color: #ffffff;
+        }
+
+        body.theme-light {
+            --bg-color: #f1f5f9; /* slate-100 */
+            --text-color: #1e293b; /* slate-800 */
+            --text-muted-color: #475569; /* slate-600 */
+            --panel-bg: rgba(255, 255, 255, 0.6);
+            --panel-border: rgba(0, 0, 0, 0.1);
+            --input-bg: rgba(0, 0, 0, 0.05);
+            --input-border: rgba(0, 0, 0, 0.15);
+            --flip-card-top-bg: #e2e8f0; /* slate-200 */
+            --flip-card-bottom-bg: #f1f5f9; /* slate-100 */
+            --flip-card-border: rgba(0,0,0,0.1);
+            --logo-color: #1e293b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.5s ease-in-out, color 0.5s ease-in-out, background-image 0.5s ease-in-out;
+        }
+
+        /* Glassmorphism style for widgets */
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 1rem;
+            border: 1px solid var(--panel-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(30, 41, 59, 0.2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.5); }
+
+        .styled-input {
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--text-color);
+        }
+        .styled-input::placeholder { color: var(--text-muted-color); opacity: 0.7; }
+
+        .task-item { background: rgba(255, 255, 255, 0.05); transition: background 0.2s ease; }
+        .task-item:hover { background: rgba(255, 255, 255, 0.1); }
+        .theme-light .task-item { background: rgba(0,0,0, 0.03); }
+        .theme-light .task-item:hover { background: rgba(0,0,0, 0.06); }
+        .task-item .delete-btn { opacity: 0; transition: opacity 0.2s ease; }
+        .task-item:hover .delete-btn { opacity: 1; }
+
+        /* Sound wave animation */
+        .sound-wave span {
+            display: inline-block; width: 3px; margin: 0 2px;
+            background-color: var(--accent-color);
+            animation: wave 1.2s infinite ease-in-out;
+        }
+        .sound-wave span:nth-child(1) { animation-delay: 0.1s; }
+        .sound-wave span:nth-child(2) { animation-delay: 0.2s; }
+        .sound-wave span:nth-child(3) { animation-delay: 0.3s; }
+        .sound-wave span:nth-child(4) { animation-delay: 0.4s; }
+        @keyframes wave { 0%, 40%, 100% { transform: scaleY(0.4); } 20% { transform: scaleY(1.0); } }
+
+        /* Clock Pulse Animation */
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        .clock-pulse { animation: pulse 0.4s ease-in-out; }
+
+        /* --- Flip Clock Styles --- */
+        .flip-clock { display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .flip-unit { position: relative; width: 70px; height: 100px; perspective: 600px; font-size: 5rem; font-weight: bold; line-height: 100px; font-family: 'Inter', sans-serif; }
+        @media (max-width: 768px) { .flip-unit { width: 45px; height: 60px; font-size: 2.5rem; line-height: 60px; } .flip-clock { gap: 5px; } }
+        .flip-card { position: absolute; width: 100%; height: 100%; transform-style: preserve-3d; }
+        .flip-card-face { position: absolute; width: 100%; height: 50%; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; border-radius: 8px; color: var(--text-color); text-align: center; }
+        .flip-card-face.top { top: 0; line-height: 100px; background: var(--flip-card-top-bg); border-bottom: 1px solid var(--flip-card-border); }
+        .flip-card-face.bottom { bottom: 0; line-height: 0; background: var(--flip-card-bottom-bg); }
+        .flipper { z-index: 10; }
+        .flipper.top-flipper { transform-origin: bottom; animation: flip-top 0.6s ease-in forwards; }
+        @keyframes flip-top { from { transform: rotateX(0deg); } to { transform: rotateX(-90deg); } }
+        /* --- End Flip Clock Styles --- */
+        
+        /* Accent color styling */
+        .accent-text { color: var(--accent-color); }
+        .accent-bg { background-color: var(--accent-color); color: white; }
+        .accent-bg-hover:hover { background-color: var(--accent-color-hover); }
+        .accent-border { border-color: var(--accent-color); }
+        .selection-accent::selection { background-color: var(--accent-color); color: #0f172a; }
+
+        /* Settings Toggle Switch */
+        .toggle-checkbox:checked { right: 0; border-color: var(--accent-color); }
+        .toggle-checkbox:checked + .toggle-label { background-color: var(--accent-color); }
+
+        /* Focus Mode Styles */
+        #focus-overlay { transition: opacity 0.5s ease-in-out; }
+        body.focus-active #focus-overlay { opacity: 1; }
+        body.focus-active .non-focus-widget,
+        body.focus-active .bottom-right-controls,
+        body.focus-active .top-left-logo {
+            transition: transform 0.4s ease, opacity 0.4s ease, filter 0.4s ease;
+            opacity: 0.1;
+            filter: blur(5px);
+            pointer-events: none;
+        }
+        body.focus-active .widget-in-focus { opacity: 1; filter: blur(0); transform: scale(1.03); z-index: 45; position: relative; }
+        #exit-focus-btn { transition: opacity 0.3s, transform 0.3s; }
+        .studi-logo { fill: var(--logo-color); }
+    </style>
+</head>
+<body class="selection-accent">
+    <!-- Logo -->
+    <div class="fixed top-6 left-6 z-50 flex items-center gap-3 top-left-logo">
+   <img src="logo1.png" alt="Studi Logo" class="h-16 w-16 rounded-full object-cover">
+</div>
+
+    <main class="min-h-screen w-full p-4 md:p-8 flex items-center justify-center">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-7xl">
+
+            <!-- Clock & Date Widget -->
+            <div id="clock-widget" class="glass-panel non-focus-widget p-6 flex flex-col justify-center items-center md:col-span-2 lg:col-span-2">
+                <div id="time-display-container" class="w-full">
+                     <h1 id="time-display-normal" class="text-6xl md:text-8xl font-bold tracking-tight flex items-baseline justify-center">00:00:00</h1>
+                </div>
+                <p id="date-display" class="text-lg md:text-xl mt-2" style="color: var(--text-muted-color);">Thursday, 25 September 2025</p>
+            </div>
+
+            <!-- Timer Widget -->
+            <div id="timer-widget" class="glass-panel widget-in-focus p-6 md:col-span-2 lg:col-span-2">
+                <div class="flex border-b mb-4" style="border-color: rgba(128,128,128, 0.2)">
+                    <button id="countdown-tab" class="timer-tab flex-1 pb-2 border-b-2 accent-border accent-text font-semibold">Countdown</button>
+                    <button id="pomodoro-tab" class="timer-tab flex-1 pb-2 border-b-2 border-transparent font-semibold" style="color: var(--text-muted-color);">Pomodoro</button>
+                    <button id="stopwatch-tab" class="timer-tab flex-1 pb-2 border-b-2 border-transparent font-semibold" style="color: var(--text-muted-color);">Stopwatch</button>
+                </div>
+                <!-- Countdown View -->
+                <div id="countdown-view">
+                     <div class="flex justify-center items-center gap-2 md:gap-4 mb-4">
+                        <input id="hours" type="number" min="0" placeholder="HH" class="styled-input w-20 h-20 text-4xl text-center rounded-lg"><span class="text-4xl">:</span>
+                        <input id="minutes" type="number" min="0" max="59" placeholder="MM" class="styled-input w-20 h-20 text-4xl text-center rounded-lg"><span class="text-4xl">:</span>
+                        <input id="seconds" type="number" min="0" max="59" placeholder="SS" class="styled-input w-20 h-20 text-4xl text-center rounded-lg">
+                    </div>
+                    <div class="flex justify-center gap-4">
+                        <button id="start-timer" class="accent-bg accent-bg-hover transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-play"></i> Start</button>
+                        <button id="pause-timer" class="bg-slate-600 hover:bg-slate-700 transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-pause"></i> Pause</button>
+                        <button id="reset-timer" class="bg-rose-600 hover:bg-rose-700 transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-arrow-counter-clockwise"></i> Reset</button>
+                    </div>
+                </div>
+                <!-- Pomodoro View -->
+                <div id="pomodoro-view" class="hidden text-center">
+                    <p id="pomodoro-status" class="text-2xl font-semibold mb-2 accent-text">Focus</p>
+                    <p id="pomodoro-time" class="text-7xl font-bold mb-4">25:00</p>
+                     <div class="flex justify-center gap-4">
+                        <button id="pomodoro-start" class="accent-bg accent-bg-hover transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-play"></i> Start</button>
+                         <button id="pomodoro-pause" class="bg-slate-600 hover:bg-slate-700 transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-pause"></i> Pause</button>
+                        <button id="pomodoro-reset" class="bg-rose-600 hover:bg-rose-700 transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-skip-forward"></i> Skip</button>
+                    </div>
+                </div>
+                <!-- Stopwatch View -->
+                <div id="stopwatch-view" class="hidden text-center">
+                    <p id="stopwatch-time" class="text-7xl font-bold font-mono mb-4 tracking-tight">00:00:00</p>
+                    <div class="flex justify-center gap-4">
+                        <button id="stopwatch-start" class="accent-bg accent-bg-hover transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-play"></i> Start</button>
+                        <button id="stopwatch-pause" class="bg-slate-600 hover:bg-slate-700 transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-pause"></i> Pause</button>
+                        <button id="stopwatch-reset" class="bg-rose-600 hover:bg-rose-700 transition-colors px-6 py-2 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-arrow-counter-clockwise"></i> Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Tasks Widget -->
+            <div id="tasks-widget" class="glass-panel widget-in-focus p-6 flex flex-col md:col-span-2 lg:col-span-2 min-h-[250px]">
+                <div class="flex justify-between items-center mb-4 border-b pb-2" style="border-color: rgba(128,128,128, 0.2)">
+                    <h2 class="text-xl font-bold">Quick Tasks</h2>
+                    <button id="share-tasks-btn" title="Share Tasks" class="p-2 rounded-full hover:bg-slate-500/50 transition-colors"><i class="ph-bold ph-share-network text-xl"></i></button>
+                </div>
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="task-input" class="styled-input w-full px-3 py-2 rounded-lg" placeholder="Add a new task...">
+                    <button id="add-task-btn" class="accent-bg accent-bg-hover transition-colors px-4 py-2 rounded-lg font-semibold"><i class="ph ph-plus"></i></button>
+                </div>
+                <ul id="task-list" class="space-y-2 overflow-y-auto flex-grow"></ul>
+            </div>
+
+            <!-- ANIMATED Music Player Widget -->
+            <div class="glass-panel non-focus-widget p-6 flex flex-col justify-center items-center text-center relative overflow-hidden">
+                <div id="music-options" class="w-full h-full flex flex-col justify-center items-center text-center transition-transform duration-500 ease-in-out">
+                    <i class="ph-fill ph-music-notes text-5xl mb-3 accent-text"></i>
+                    <h3 class="text-lg font-semibold mb-2">Study Music</h3>
+                    <p class="text-sm flex-grow" style="color: var(--text-muted-color);">Open a playlist in a new tab.</p>
+                    <div class="w-full space-y-3">
+                         <a href="https://open.spotify.com/playlist/37i9dQZF1DWWQRwui02bsd" data-service="spotify" class="music-link w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 transition-colors px-4 py-2 rounded-lg font-semibold text-white">
+                            <i class="ph-fill ph-spotify-logo"></i> Spotify</a>
+                         <a href="https://www.youtube.com/watch?v=jfKfPfyJRdk" data-service="youtube" class="music-link w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 transition-colors px-4 py-2 rounded-lg font-semibold text-white">
+                            <i class="ph-fill ph-youtube-logo"></i> YouTube</a>
+                    </div>
+                </div>
+                <div id="music-playing" class="absolute inset-0 w-full h-full p-6 flex flex-col justify-center items-center text-center bg-slate-800/20 transform translate-y-full transition-transform duration-500 ease-in-out">
+                    <p class="text-lg font-semibold mb-3">Now Playing...</p>
+                    <div class="sound-wave h-10 flex items-center"><span></span><span></span><span></span><span></span></div>
+                    <p id="playing-service" class="text-sm accent-text mt-2"></p>
+                    <button id="music-back-btn" class="mt-4 bg-slate-600 hover:bg-slate-700 text-xs px-3 py-1 rounded-full">Choose Another</button>
+                </div>
+            </div>
+
+            <!-- Background Uploader Widget -->
+            <div class="glass-panel non-focus-widget p-6 flex flex-col justify-center items-center text-center">
+                 <i class="ph-fill ph-image text-5xl mb-3 accent-text"></i>
+                <h3 class="text-lg font-semibold mb-2">Change BG</h3>
+                <p class="text-sm flex-grow" style="color: var(--text-muted-color);">Personalize your dashboard.</p>
+                <label for="background-uploader" class="cursor-pointer w-full bg-slate-600 hover:bg-slate-700 transition-colors px-6 py-2 rounded-lg font-semibold text-white">Upload Image</label>
+                <input type="file" id="background-uploader" class="hidden" accept="image/*">
+            </div>
+
+        </div>
+    </main>
+
+    <div id="focus-overlay" class="pointer-events-none fixed inset-0 z-40 bg-black/70 opacity-0"></div>
+    
+    <button id="exit-focus-btn" class="hidden fixed top-6 right-6 z-50 accent-bg accent-bg-hover px-4 py-2 rounded-lg font-semibold text-lg flex items-center gap-2" title="Exit Focus Mode">
+        <i class="ph ph-x"></i> Exit Focus
+    </button>
+
+
+    <!-- Settings & Fullscreen Buttons -->
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 bottom-right-controls">
+        <button id="focus-mode-btn" class="glass-panel p-3 rounded-full hover:bg-slate-500/50 transition-colors" title="Toggle Focus Mode">
+            <i class="ph-bold ph-crosshair text-2xl block leading-none"></i>
+        </button>
+        <button id="settings-btn" class="glass-panel p-3 rounded-full hover:bg-slate-500/50 transition-colors" title="Settings">
+            <i class="ph-bold ph-gear text-2xl block leading-none"></i>
+        </button>
+        <button id="fullscreen-btn" class="glass-panel p-3 rounded-full hover:bg-slate-500/50 transition-colors" title="Toggle Fullscreen">
+            <i id="fullscreen-icon" class="ph-bold ph-arrows-out text-2xl block leading-none"></i>
+        </button>
+    </div>
+
+    <!-- Settings Panel -->
+    <div id="settings-panel" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md p-6 rounded-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Settings</h2>
+                <button id="close-settings-btn" class="p-1 rounded-full hover:bg-slate-500/50"><i class="ph-bold ph-x text-xl"></i></button>
+            </div>
+            <div class="space-y-6">
+                <!-- Background Theme -->
+                <div>
+                    <p class="font-semibold mb-3">Theme</p>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button class="theme-btn border-2 p-2 rounded-lg font-semibold" data-theme="light">Light</button>
+                        <button class="theme-btn border-2 p-2 rounded-lg font-semibold" data-theme="dark">Dark</button>
+                        <button class="theme-btn border-2 p-2 rounded-lg font-semibold" data-theme="default-image">Image</button>
+                    </div>
+                </div>
+                <!-- Clock Format -->
+                <div class="flex items-center justify-between">
+                    <label for="clock-format-toggle" class="font-semibold">24-Hour Clock</label>
+                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="toggle" id="clock-format-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                        <label for="clock-format-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                    </div>
+                </div>
+                 <!-- Clock Animation -->
+                <div class="flex items-center justify-between">
+                    <label for="clock-animation-select" class="font-semibold">Clock Style</label>
+                    <select id="clock-animation-select" class="styled-input rounded-lg px-3 py-1.5">
+                        <option value="normal">Normal</option>
+                        <option value="pulse">Pulse</option>
+                        <option value="flip">Flip</option>
+                    </select>
+                </div>
+                 <!-- Timer Sound -->
+                <div class="flex items-center justify-between">
+                    <label for="timer-sound-select" class="font-semibold">Timer Alert Sound</label>
+                    <select id="timer-sound-select" class="styled-input rounded-lg px-3 py-1.5">
+                        <option value="C5">Default</option>
+                        <option value="G5">High Pitch</option>
+                        <option value="A4">Melody</option>
+                    </select>
+                </div>
+                 <!-- Accent Color -->
+                 <div class="flex items-center justify-between">
+                    <p class="font-semibold">Accent Color</p>
+                    <div class="flex gap-3">
+                        <button class="color-swatch w-8 h-8 rounded-full bg-cyan-500" data-color="cyan"></button>
+                        <button class="color-swatch w-8 h-8 rounded-full bg-fuchsia-500" data-color="fuchsia"></button>
+                        <button class="color-swatch w-8 h-8 rounded-full bg-lime-500" data-color="lime"></button>
+                    </div>
+                </div>
+                <!-- Stopwatch Milliseconds -->
+                <div class="flex items-center justify-between">
+                    <label for="stopwatch-ms-toggle" class="font-semibold">Show Milliseconds</label>
+                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="toggle" id="stopwatch-ms-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                        <label for="stopwatch-ms-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Share Modal -->
+    <div id="share-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md p-6 rounded-2xl text-center">
+             <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Share Your Tasks</h2>
+                <button id="close-share-btn" class="p-1 rounded-full hover:bg-slate-500/50"><i class="ph-bold ph-x text-xl"></i></button>
+            </div>
+            <p class="mb-4" style="color: var(--text-muted-color);">Share this link or QR code with others.</p>
+            <div id="qrcode" class="flex justify-center mb-4 p-2 bg-white rounded-lg"></div>
+            <input id="share-link-input" type="text" readonly class="styled-input w-full text-center p-2 rounded-lg mb-4">
+            <button id="copy-link-btn" class="w-full accent-bg accent-bg-hover transition-colors px-6 py-2 rounded-lg font-semibold flex items-center justify-center gap-2">
+                <i class="ph ph-copy"></i><span>Copy Link</span>
+            </button>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- GLOBAL SETTINGS ---
+            const settings = {
+                is24Hour: localStorage.getItem('studi-is24Hour') === 'true',
+                timerSound: localStorage.getItem('studi-timerSound') || 'C5',
+                accentColor: localStorage.getItem('studi-accentColor') || 'cyan',
+                clockStyle: localStorage.getItem('studi-clockStyle') || 'normal',
+                showMilliseconds: localStorage.getItem('studi-showMilliseconds') === 'true',
+                theme: localStorage.getItem('studi-theme') || 'default-image',
+                focusMode: false,
+            };
+            const root = document.documentElement;
+            const colors = {
+                cyan: { accent: '#06b6d4', hover: '#0891b2' },
+                fuchsia: { accent: '#d946ef', hover: '#c026d3' },
+                lime: { accent: '#84cc16', hover: '#65a30d' },
+            };
+            const defaultBgImage = "url('https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')";
+
+
+            function applyTheme() {
+                document.body.classList.remove('theme-light');
+                document.body.style.backgroundImage = '';
+
+                if (settings.theme === 'light') {
+                    document.body.classList.add('theme-light');
+                } else if (settings.theme === 'dark') {
+                    // Dark is default state, no class needed, just ensure no image.
+                } else if (settings.theme === 'default-image') {
+                    document.body.style.backgroundImage = defaultBgImage;
+                } else if (settings.theme.startsWith('data:image')) { // Custom uploaded image
+                    document.body.style.backgroundImage = `url('${settings.theme}')`;
+                }
+
+                // Update active button state
+                document.querySelectorAll('.theme-btn').forEach(btn => {
+                    const isActive = btn.dataset.theme === settings.theme;
+                    btn.classList.toggle('accent-bg', isActive);
+                    btn.classList.toggle('accent-border', isActive);
+                    btn.classList.toggle('border-transparent', !isActive);
+                });
+            }
+
+
+            function applySettings() {
+                // Apply color
+                root.style.setProperty('--accent-color', colors[settings.accentColor].accent);
+                root.style.setProperty('--accent-color-hover', colors[settings.accentColor].hover);
+                document.querySelectorAll('.color-swatch').forEach(swatch => {
+                    swatch.classList.toggle('ring-2', swatch.dataset.color === settings.accentColor);
+                    swatch.classList.toggle('ring-white', swatch.dataset.color === settings.accentColor);
+                });
+
+                // Apply toggles
+                document.getElementById('clock-format-toggle').checked = settings.is24Hour;
+                document.getElementById('stopwatch-ms-toggle').checked = settings.showMilliseconds;
+                
+                // Apply selects
+                document.getElementById('clock-animation-select').value = settings.clockStyle;
+                document.getElementById('timer-sound-select').value = settings.timerSound;
+
+                // Apply theme
+                applyTheme();
+
+                // Apply focus mode visuals
+                toggleFocusModeVisuals(settings.focusMode);
+                // Setup clock style
+                setupClockView(settings.clockStyle);
+            }
+
+            // --- WIDGET 1: CLOCK & DATE ---
+            const timeDisplayContainer = document.getElementById('time-display-container');
+            const dateDisplay = document.getElementById('date-display');
+            let clockInterval;
+
+            function setupClockView(style) {
+                clearInterval(clockInterval);
+                timeDisplayContainer.innerHTML = '';
+                
+                if (style === 'flip') {
+                    timeDisplayContainer.innerHTML = `
+                        <div class="flip-clock">
+                            <div class="flip-unit"><div class="flip-card" data-unit="hours" data-index="0"></div></div>
+                            <div class="flip-unit"><div class="flip-card" data-unit="hours" data-index="1"></div></div>
+                            <div class="text-5xl self-center">:</div>
+                            <div class="flip-unit"><div class="flip-card" data-unit="minutes" data-index="0"></div></div>
+                            <div class="flip-unit"><div class="flip-card" data-unit="minutes" data-index="1"></div></div>
+                            <div class="text-5xl self-center">:</div>
+                            <div class="flip-unit"><div class="flip-card" data-unit="seconds" data-index="0"></div></div>
+                            <div class="flip-unit"><div class="flip-card" data-unit="seconds" data-index="1"></div></div>
+                        </div>`;
+                    initFlipClock();
+                    clockInterval = setInterval(updateFlipClock, 1000);
+                } else {
+                    timeDisplayContainer.innerHTML = `<h1 id="time-display-normal" class="text-6xl md:text-8xl font-bold tracking-tight flex items-baseline justify-center">00:00:00</h1>`;
+                    updateNormalClock(); // Update immediately
+                    clockInterval = setInterval(updateNormalClock, 1000);
+                }
+            }
+
+            function updateNormalClock() {
+                const timeDisplay = document.getElementById('time-display-normal');
+                if (!timeDisplay) return;
+
+                const now = new Date();
+                const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: !settings.is24Hour };
+                let timeString = now.toLocaleTimeString('en-US', timeOptions);
+
+                if (settings.is24Hour) {
+                    timeDisplay.innerHTML = timeString;
+                } else {
+                    const parts = timeString.split(' ');
+                    timeDisplay.innerHTML = `${parts[0]} <span class="text-3xl md:text-5xl font-medium tracking-normal" style="color: var(--text-muted-color);">${parts[1]}</span>`;
+                }
+                
+                if (settings.clockStyle === 'pulse' && !timeDisplay.classList.contains('clock-pulse')) {
+                    timeDisplay.classList.add('clock-pulse');
+                    setTimeout(() => timeDisplay.classList.remove('clock-pulse'), 400);
+                }
+                dateDisplay.textContent = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            }
+
+            function initFlipClock() {
+                const now = new Date();
+                const hours = settings.is24Hour ? now.getHours() : now.getHours() % 12 || 12;
+                const minutes = now.getMinutes();
+                const seconds = now.getSeconds();
+                const timeValues = {
+                    hours: hours.toString().padStart(2,'0'),
+                    minutes: minutes.toString().padStart(2,'0'),
+                    seconds: seconds.toString().padStart(2,'0')
+                };
+
+                for (const unit in timeValues) {
+                    const digits = timeValues[unit];
+                    for(let i=0; i < digits.length; i++) {
+                        const card = document.querySelector(`.flip-card[data-unit="${unit}"][data-index="${i}"]`);
+                        if (card) {
+                            const digit = digits[i];
+                            card.innerHTML = `
+                                <div class="flip-card-face top static" data-value="${digit}">${digit}</div>
+                                <div class="flip-card-face bottom static" data-value="${digit}">${digit}</div>`;
+                        }
+                    }
+                }
+            }
+            
+            function updateFlipClock() {
+                const now = new Date();
+                const hours = settings.is24Hour ? now.getHours() : now.getHours() % 12 || 12;
+                const minutes = now.getMinutes();
+                const seconds = now.getSeconds();
+                const timeValues = {
+                    hours: hours.toString().padStart(2,'0'),
+                    minutes: minutes.toString().padStart(2,'0'),
+                    seconds: seconds.toString().padStart(2,'0')
+                };
+
+                for (const unit in timeValues) {
+                    const digits = timeValues[unit];
+                    for(let i=0; i < digits.length; i++) {
+                        const card = document.querySelector(`.flip-card[data-unit="${unit}"][data-index="${i}"]`);
+                        if(card) {
+                            const newValue = digits[i];
+                            flip(card, newValue);
+                        }
+                    }
+                }
+                 dateDisplay.textContent = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            }
+
+            function flip(card, newValue) {
+                const staticTop = card.querySelector('.top.static');
+                const staticBottom = card.querySelector('.bottom.static');
+                const currentValue = staticTop.dataset.value;
+
+                if (currentValue === newValue || card.querySelector('.flipper.top-flipper')) return;
+
+                const topFlipper = document.createElement('div');
+                topFlipper.className = 'flip-card-face top flipper top-flipper';
+                topFlipper.textContent = currentValue;
+                
+                staticTop.textContent = newValue;
+                staticTop.dataset.value = newValue;
+
+                card.append(topFlipper);
+
+                setTimeout(() => {
+                    staticBottom.textContent = newValue;
+                    staticBottom.dataset.value = newValue;
+                    topFlipper.remove();
+                }, 600);
+            }
+            
+            // --- WIDGET 2: TIMERS ---
+            const timerTabs = document.querySelectorAll('.timer-tab');
+            const timerViews = {
+                countdown: document.getElementById('countdown-view'),
+                pomodoro: document.getElementById('pomodoro-view'),
+                stopwatch: document.getElementById('stopwatch-view')
+            };
+
+            function switchTimerTab(selectedId) {
+                timerTabs.forEach(tab => {
+                    const isSelected = tab.id === selectedId;
+                    tab.classList.toggle('accent-border', isSelected);
+                    tab.classList.toggle('accent-text', isSelected);
+                    tab.classList.toggle('border-transparent', !isSelected);
+                    tab.style.color = isSelected ? 'var(--accent-color)' : 'var(--text-muted-color)';
+                    timerViews[tab.id.replace('-tab', '')].classList.toggle('hidden', !isSelected);
+                });
+            }
+            timerTabs.forEach(tab => tab.addEventListener('click', () => switchTimerTab(tab.id)));
+            
+            let synth;
+            function initializeSynth() { if (!synth && window.Tone) { if (Tone.context.state !== 'running') Tone.start(); synth = new Tone.Synth().toDestination(); } }
+            document.body.addEventListener('click', initializeSynth, { once: true });
+            
+            function playTimerSound() {
+                if(synth) {
+                    if (settings.timerSound === 'A4') {
+                        const now = Tone.now();
+                        synth.triggerAttackRelease("A4", "8n", now);
+                        synth.triggerAttackRelease("E5", "8n", now + 0.25);
+                        synth.triggerAttackRelease("A5", "8n", now + 0.5);
+                    } else {
+                        synth.triggerAttackRelease(settings.timerSound, "0.5");
+                    }
+                }
+            }
+            // Countdown Logic
+            const hoursInput = document.getElementById('hours'); const minutesInput = document.getElementById('minutes'); const secondsInput = document.getElementById('seconds');
+            let countdownInterval, totalSeconds = 0, isPaused = false;
+            document.getElementById('start-timer').addEventListener('click', () => { if(totalSeconds <= 0){ const h = parseInt(hoursInput.value) || 0, m = parseInt(minutesInput.value) || 0, s = parseInt(secondsInput.value) || 0; totalSeconds = (h * 3600) + (m * 60) + s; } if (totalSeconds > 0) { isPaused = false; startCountdown(); } });
+            document.getElementById('pause-timer').addEventListener('click', () => { isPaused = true; clearInterval(countdownInterval); });
+            document.getElementById('reset-timer').addEventListener('click', () => { clearInterval(countdownInterval); totalSeconds = 0; isPaused = false; hoursInput.value = ''; minutesInput.value = ''; secondsInput.value = ''; updateCountdownDisplay(); });
+            function startCountdown() { clearInterval(countdownInterval); countdownInterval = setInterval(() => { if (totalSeconds > 0 && !isPaused) { totalSeconds--; updateCountdownDisplay(); } else if (totalSeconds <= 0) { clearInterval(countdownInterval); playTimerSound(); setTimeout(() => { hoursInput.value = ''; minutesInput.value = ''; secondsInput.value = ''; }, 1000); } }, 1000); }
+            function updateCountdownDisplay() { const h = Math.floor(totalSeconds / 3600), m = Math.floor((totalSeconds % 3600) / 60), s = totalSeconds % 60; hoursInput.value = h.toString().padStart(2, '0'); minutesInput.value = m.toString().padStart(2, '0'); secondsInput.value = s.toString().padStart(2, '0'); }
+            
+            // Pomodoro Logic
+            const pomodoroStatus = document.getElementById('pomodoro-status'); const pomodoroTime = document.getElementById('pomodoro-time');
+            let pomodoroInterval; let pomodoroState = { mode: 'focus', timeLeft: 1500, cycles: 0, isRunning: false }; const pomodoroTimes = { focus: 1500, shortBreak: 300, longBreak: 900 };
+            document.getElementById('pomodoro-start').addEventListener('click', () => { pomodoroState.isRunning = true; startPomodoro(); });
+            document.getElementById('pomodoro-pause').addEventListener('click', () => { pomodoroState.isRunning = false; clearInterval(pomodoroInterval); });
+            document.getElementById('pomodoro-reset').addEventListener('click', () => { clearInterval(pomodoroInterval); switchPomodoroMode(); if (pomodoroState.isRunning) startPomodoro(); });
+            function startPomodoro() { clearInterval(pomodoroInterval); pomodoroInterval = setInterval(() => { if (pomodoroState.timeLeft > 0 && pomodoroState.isRunning) { pomodoroState.timeLeft--; updatePomodoroDisplay(); } else if (pomodoroState.timeLeft <= 0) { clearInterval(pomodoroInterval); playTimerSound(); switchPomodoroMode(); startPomodoro(); } }, 1000); }
+            function switchPomodoroMode() { if (pomodoroState.mode === 'focus') { pomodoroState.cycles++; if (pomodoroState.cycles % 4 === 0) { pomodoroState.mode = 'longBreak'; pomodoroStatus.textContent = "Long Break"; pomodoroState.timeLeft = pomodoroTimes.longBreak; } else { pomodoroState.mode = 'shortBreak'; pomodoroStatus.textContent = "Short Break"; pomodoroState.timeLeft = pomodoroTimes.shortBreak; } } else { pomodoroState.mode = 'focus'; pomodoroStatus.textContent = "Focus"; pomodoroState.timeLeft = pomodoroTimes.focus; } updatePomodoroDisplay(); }
+            function updatePomodoroDisplay() { const m = Math.floor(pomodoroState.timeLeft / 60), s = pomodoroState.timeLeft % 60; pomodoroTime.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`; }
+            updatePomodoroDisplay();
+
+            // Stopwatch Logic
+            const stopwatchTime = document.getElementById('stopwatch-time');
+            let stopwatchInterval, stopwatchStartTime, stopwatchElapsedTime = 0, stopwatchIsRunning = false;
+            function updateStopwatchDisplay() {
+                const totalMs = stopwatchElapsedTime;
+                const minutes = Math.floor((totalMs % 3600000) / 60000);
+                const seconds = Math.floor((totalMs % 60000) / 1000);
+                let timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                if (settings.showMilliseconds) {
+                    const centiseconds = Math.floor((totalMs % 1000) / 10);
+                    timeString += `:${centiseconds.toString().padStart(2, '0')}`;
+                }
+                stopwatchTime.textContent = timeString;
+            }
+            document.getElementById('stopwatch-start').addEventListener('click', () => {
+                if (!stopwatchIsRunning) {
+                    stopwatchIsRunning = true;
+                    stopwatchStartTime = Date.now() - stopwatchElapsedTime;
+                    stopwatchInterval = setInterval(() => {
+                        stopwatchElapsedTime = Date.now() - stopwatchStartTime;
+                        updateStopwatchDisplay();
+                    }, 10);
+                }
+            });
+            document.getElementById('stopwatch-pause').addEventListener('click', () => {
+                stopwatchIsRunning = false;
+                clearInterval(stopwatchInterval);
+            });
+            document.getElementById('stopwatch-reset').addEventListener('click', () => {
+                stopwatchIsRunning = false;
+                clearInterval(stopwatchInterval);
+                stopwatchElapsedTime = 0;
+                updateStopwatchDisplay();
+            });
+            updateStopwatchDisplay();
+            
+            // --- QUICK TASKS WIDGET ---
+            const taskInput = document.getElementById('task-input'); const addTaskBtn = document.getElementById('add-task-btn'); const taskList = document.getElementById('task-list');
+            const addTask = (taskText) => { if (taskText.trim() === '') return; const li = document.createElement('li'); li.className = 'task-item flex items-center justify-between p-2 rounded-lg'; li.innerHTML = `<span class="flex-grow">${taskText}</span><button class="delete-btn text-rose-400 hover:text-rose-500 ml-2 p-1 rounded-full"><i class="ph-bold ph-trash"></i></button>`; li.querySelector('.delete-btn').addEventListener('click', () => { li.remove(); }); taskList.appendChild(li); };
+            addTaskBtn.addEventListener('click', () => { addTask(taskInput.value); taskInput.value = ''; taskInput.focus(); });
+            taskInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { addTask(taskInput.value); taskInput.value = ''; } });
+            
+            // --- SHARE TASKS ---
+            const shareModal = document.getElementById('share-modal');
+            const qrCodeEl = document.getElementById('qrcode');
+            const shareLinkInput = document.getElementById('share-link-input');
+            const copyLinkBtn = document.getElementById('copy-link-btn');
+            let qrCodeInstance = null;
+            document.getElementById('share-tasks-btn').addEventListener('click', () => {
+                const tasks = [...taskList.querySelectorAll('li span')].map(span => span.textContent);
+                if (tasks.length === 0) { return; } // Silently fail if no tasks
+                const encodedTasks = encodeURIComponent(JSON.stringify(tasks));
+                const url = `${window.location.origin}${window.location.pathname}?tasks=${encodedTasks}`;
+                shareLinkInput.value = url;
+                
+                if (qrCodeInstance) {
+                    qrCodeInstance.clear();
+                    qrCodeInstance.makeCode(url);
+                } else {
+                    qrCodeInstance = new QRCode(qrCodeEl, { text: url, width: 128, height: 128, colorDark: "#000000", colorLight: "#ffffff" });
+                }
+                
+                shareModal.classList.remove('hidden');
+            });
+            document.getElementById('close-share-btn').addEventListener('click', () => shareModal.classList.add('hidden'));
+            copyLinkBtn.addEventListener('click', () => {
+                shareLinkInput.select();
+                document.execCommand('copy');
+                const btnText = copyLinkBtn.querySelector('span');
+                btnText.textContent = 'Copied!';
+                setTimeout(() => { btnText.textContent = 'Copy Link'; }, 2000);
+            });
+            
+            // Check for tasks in URL on load
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('tasks')) {
+                try {
+                    const tasks = JSON.parse(decodeURIComponent(urlParams.get('tasks')));
+                    if (Array.isArray(tasks)) {
+                        tasks.forEach(task => addTask(task));
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                } catch (e) {
+                    console.error('Failed to parse tasks from URL', e);
+                }
+            }
+
+
+            // --- ANIMATED MUSIC WIDGET ---
+            const musicOptions = document.getElementById('music-options'); const musicPlaying = document.getElementById('music-playing'); const musicLinks = document.querySelectorAll('.music-link'); const musicBackButton = document.getElementById('music-back-btn'); const playingServiceText = document.getElementById('playing-service');
+            musicLinks.forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const url = this.href; const service = this.dataset.service; window.open(url, '_blank');
+                    playingServiceText.textContent = `on ${service.charAt(0).toUpperCase() + service.slice(1)}`;
+                    musicOptions.style.transform = 'translateY(-100%)'; musicOptions.style.opacity = '0';
+                    musicPlaying.style.transform = 'translateY(0)';
+                });
+            });
+            musicBackButton.addEventListener('click', () => { musicOptions.style.transform = 'translateY(0)'; musicOptions.style.opacity = '1'; musicPlaying.style.transform = 'translateY(100%)'; });
+
+            // --- BACKGROUND UPLOADER WIDGET ---
+            const backgroundUploader = document.getElementById('background-uploader');
+            backgroundUploader.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        settings.theme = e.target.result;
+                        localStorage.setItem('studi-theme', settings.theme);
+                        applyTheme();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        
+            // --- FULLSCREEN TOGGLE ---
+            const fullscreenBtn = document.getElementById('fullscreen-btn'); const fullscreenIcon = document.getElementById('fullscreen-icon');
+            function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(err => { console.error(`Error: ${err.message}`); }); } else { if (document.exitFullscreen) { document.exitFullscreen(); } } }
+            function updateFullscreenIcon() { if (document.fullscreenElement) { fullscreenIcon.classList.replace('ph-arrows-out', 'ph-arrows-in'); } else { fullscreenIcon.classList.replace('ph-arrows-in', 'ph-arrows-out'); } }
+            fullscreenBtn.addEventListener('click', toggleFullScreen);
+            document.addEventListener('fullscreenchange', updateFullscreenIcon);
+
+            // --- SETTINGS PANEL LOGIC ---
+            const settingsBtn = document.getElementById('settings-btn');
+            const settingsPanel = document.getElementById('settings-panel');
+            const closeSettingsBtn = document.getElementById('close-settings-btn');
+            
+            settingsBtn.addEventListener('click', () => settingsPanel.classList.remove('hidden'));
+            closeSettingsBtn.addEventListener('click', () => settingsPanel.classList.add('hidden'));
+
+            // Theme Change
+            document.querySelectorAll('.theme-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    settings.theme = button.dataset.theme;
+                    localStorage.setItem('studi-theme', settings.theme);
+                    applyTheme();
+                });
+            });
+
+            // Clock Format Change
+            document.getElementById('clock-format-toggle').addEventListener('change', (e) => {
+                settings.is24Hour = e.target.checked;
+                localStorage.setItem('studi-is24Hour', settings.is24Hour);
+            });
+             // Sound Change
+            document.getElementById('timer-sound-select').addEventListener('change', (e) => {
+                settings.timerSound = e.target.value;
+                localStorage.setItem('studi-timerSound', settings.timerSound);
+                if (synth) synth.triggerAttackRelease(settings.timerSound, "0.5"); // Preview sound
+            });
+             // Color Change
+            document.querySelectorAll('.color-swatch').forEach(button => {
+                button.addEventListener('click', () => {
+                    settings.accentColor = button.dataset.color;
+                    localStorage.setItem('studi-accentColor', settings.accentColor);
+                    applySettings();
+                });
+            });
+            // Clock Style Change
+            document.getElementById('clock-animation-select').addEventListener('change', (e) => {
+                settings.clockStyle = e.target.value;
+                localStorage.setItem('studi-clockStyle', settings.clockStyle);
+                setupClockView(settings.clockStyle);
+            });
+            // Stopwatch Milliseconds Change
+            document.getElementById('stopwatch-ms-toggle').addEventListener('change', (e) => {
+                settings.showMilliseconds = e.target.checked;
+                localStorage.setItem('studi-showMilliseconds', settings.showMilliseconds);
+                updateStopwatchDisplay();
+            });
+            
+            // --- FOCUS MODE LOGIC ---
+            const focusModeBtn = document.getElementById('focus-mode-btn');
+            const exitFocusBtn = document.getElementById('exit-focus-btn');
+            
+            function toggleFocusModeVisuals(isActive) {
+                document.body.classList.toggle('focus-active', isActive);
+                if (isActive) {
+                    exitFocusBtn.classList.remove('hidden');
+                } else {
+                    exitFocusBtn.classList.add('hidden');
+                }
+            }
+            
+            function handleFocusToggle() {
+                settings.focusMode = !settings.focusMode;
+                toggleFocusModeVisuals(settings.focusMode);
+            }
+
+            focusModeBtn.addEventListener('click', handleFocusToggle);
+            exitFocusBtn.addEventListener('click', handleFocusToggle);
+
+            // Apply initial settings on load
+            applySettings();
+        });
+    </script>
+</body>
+</html>
+
