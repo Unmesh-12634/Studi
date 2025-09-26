@@ -5,23 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Studi</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="logo.png" type="image/png">
 
-    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
-    <!-- Tone.js for sound -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     
-    <!-- QR Code Generator -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
 
     <style>
         :root {
@@ -74,6 +71,7 @@
             border-radius: 1rem;
             border: 1px solid var(--panel-border);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
         }
         
         /* Custom scrollbar */
@@ -95,18 +93,6 @@
         .theme-light .task-item:hover { background: rgba(0,0,0, 0.06); }
         .task-item .delete-btn { opacity: 0; transition: opacity 0.2s ease; }
         .task-item:hover .delete-btn { opacity: 1; }
-
-        /* Sound wave animation */
-        .sound-wave span {
-            display: inline-block; width: 3px; margin: 0 2px;
-            background-color: var(--accent-color);
-            animation: wave 1.2s infinite ease-in-out;
-        }
-        .sound-wave span:nth-child(1) { animation-delay: 0.1s; }
-        .sound-wave span:nth-child(2) { animation-delay: 0.2s; }
-        .sound-wave span:nth-child(3) { animation-delay: 0.3s; }
-        .sound-wave span:nth-child(4) { animation-delay: 0.4s; }
-        @keyframes wave { 0%, 40%, 100% { transform: scaleY(0.4); } 20% { transform: scaleY(1.0); } }
 
         /* Clock Pulse Animation */
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
@@ -136,80 +122,198 @@
         .toggle-checkbox:checked { right: 0; border-color: var(--accent-color); }
         .toggle-checkbox:checked + .toggle-label { background-color: var(--accent-color); }
 
-        /* Focus Mode Styles */
-        #focus-overlay { transition: opacity 0.5s ease-in-out; }
-        body.focus-active #focus-overlay { opacity: 1; }
-        body.focus-active .non-focus-widget,
-        body.focus-active .bottom-right-controls,
-        body.focus-active .top-left-logo {
-            transition: transform 0.4s ease, opacity 0.4s ease, filter 0.4s ease;
-            opacity: 0.1;
-            filter: blur(5px);
+        /* --- AI Chat & Doc Viewer Styles --- */
+        .chat-bubble { padding: 0.75rem 1rem; border-radius: 1rem; max-width: 80%; line-height: 1.5; word-wrap: break-word; }
+        .chat-bubble-user { background-color: var(--accent-color); color: white; border-bottom-right-radius: 0.25rem; }
+        .chat-bubble-ai { background-color: rgba(0,0,0,0.3); border-bottom-left-radius: 0.25rem; }
+        .theme-light .chat-bubble-ai { background-color: rgba(0,0,0,0.08); }
+        #doc-viewer-panel canvas { max-width: 100%; margin: 0 auto 1rem auto; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .ai-mode-btn { background-color: var(--input-bg); border: 1px solid var(--input-border); padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; transition: background-color 0.2s, border-color 0.2s; }
+        .ai-mode-btn.accent-bg { border-color: var(--accent-color); }
+
+        /* --- Panel Open Animation --- */
+        body.panel-open-shift #main-widget-grid {
+             opacity: 0;
+             pointer-events: none;
+             transform: scale(0.95);
+        }
+
+        /* --- Minimized Widget Styles --- */
+        #side-widget-container .glass-panel { padding: 0.75rem; }
+        #side-widget-container h1, #side-widget-container p { text-align: center; }
+        #side-widget-container #time-display-normal { font-size: 2.25rem; line-height: 2.5rem; }
+        #side-widget-container #date-display { font-size: 0.75rem; line-height: 1rem; margin-top: 0.25rem; }
+        #side-widget-container .flip-unit { width: 30px; height: 40px; font-size: 1.5rem; line-height: 40px; }
+        #side-widget-container .flip-card-face.top { line-height: 40px; }
+        #side-widget-container .flip-clock { gap: 4px; }
+        #side-widget-container .flip-clock .text-5xl { font-size: 1.5rem; }
+        #side-widget-container #timer-widget .flex-wrap { gap: 0.25rem; }
+        #side-widget-container #timer-widget input { width: 40px; height: 40px; font-size: 1.125rem; }
+        #side-widget-container #timer-widget .text-2xl, #side-widget-container #timer-widget .text-4xl { font-size: 1.125rem; }
+        #side-widget-container #pomodoro-time, #side-widget-container #stopwatch-time { font-size: 2rem; line-height: 2.25rem; margin-bottom: 0.5rem; }
+        #side-widget-container .timer-tab { padding-bottom: 0.25rem; font-size: 0.875rem; }
+        #side-widget-container .flex-wrap button { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+        #side-widget-container .flex-wrap button .ph { display: none; } /* Hide icons on small buttons */
+
+        /* --- Focus & Enlarged Mode Styles --- */
+        #focus-overlay {
+            transition: opacity 0.5s ease-in-out;
+            background: rgba(15, 23, 42, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            opacity: 0;
             pointer-events: none;
         }
-        body.focus-active .widget-in-focus { opacity: 1; filter: blur(0); transform: scale(1.03); z-index: 45; position: relative; }
-        #exit-focus-btn { transition: opacity 0.3s, transform 0.3s; }
+        body.theme-light #focus-overlay { background: rgba(241, 245, 249, 0.3); }
+
+        body.focus-active #focus-overlay,
+        body.widget-enlarged #focus-overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        body.focus-active #main-widget-grid > *,
+        body.focus-active .bottom-right-controls,
+        body.focus-active .top-left-logo { display: none; }
+        
+        body.focus-active #main-widget-grid {
+            display: flex;
+            flex-direction: column; /* Mobile first: stacked */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            gap: 2rem;
+            padding: 1rem; /* Add padding for spacing from edges */
+        }
+        
+        body.focus-active #clock-widget-wrapper,
+        body.focus-active #timer-widget-wrapper {
+            display: block;
+            width: 90%; /* Occupy most width on mobile */
+            max-width: 500px; /* Cap width on mobile */
+            position: relative;
+            z-index: 45;
+            transform: scale(1.05);
+        }
+
+        /* On larger screens, switch to the requested row layout */
+        @media (min-width: 1024px) {
+            body.focus-active #main-widget-grid {
+                flex-direction: row; /* Side-by-side */
+                align-items: stretch; /* Make children same height */
+            }
+            body.focus-active #clock-widget-wrapper,
+            body.focus-active #timer-widget-wrapper {
+                width: 45%; /* Each takes up a bit less than half to allow for the gap */
+                max-width: 700px; /* Allow them to grow larger */
+            }
+        }
+
+        body.widget-enlarged #main-widget-grid > *,
+        body.widget-enlarged .bottom-right-controls,
+        body.widget-enlarged .top-left-logo {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .widget-is-enlarged {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            position: fixed !important;
+            width: 90vw;
+            max-width: 800px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(1.15);
+            z-index: 55;
+        }
+        
+        /* Appearance change for enlarged widgets */
+        .widget-is-enlarged #clock-widget { padding: 2rem; }
+        .widget-is-enlarged #time-display-normal { font-size: 10rem; }
+        .widget-is-enlarged #date-display { font-size: 1.5rem; }
+        .widget-is-enlarged .flip-unit { width: 90px; height: 120px; font-size: 6rem; line-height: 120px; }
+        .widget-is-enlarged .flip-card-face.top { line-height: 120px; }
+
+        .widget-is-enlarged #timer-widget { padding: 2rem; }
+        .widget-is-enlarged #timer-widget input { width: 100px; height: 100px; font-size: 4rem; }
+        .widget-is-enlarged #timer-widget .text-4xl { font-size: 4rem; }
+        .widget-is-enlarged #pomodoro-time, .widget-is-enlarged #stopwatch-time { font-size: 8rem; }
+        .widget-is-enlarged #pomodoro-status { font-size: 2rem; }
+        .widget-is-enlarged .flex-wrap button { padding: 0.75rem 1.5rem; font-size: 1.125rem; }
+        .widget-is-enlarged .timer-tab { font-size: 1.125rem; }
+
     </style>
 </head>
 <body class="selection-accent">
-    <!-- Logo -->
+    <div id="focus-overlay" class="fixed inset-0 z-40"></div>
+
     <div class="fixed top-4 left-4 md:top-6 md:left-6 z-50 flex items-center gap-3 top-left-logo">
        <img src="logo.png" alt="Studi Logo" class="h-12 w-12 md:h-16 md:w-16 rounded-full object-cover">
     </div>
 
+    <!-- Container for minimized widgets on the right -->
+    <div id="side-widget-container" class="fixed top-4 right-4 z-[65] w-[300px] lg:w-[350px] space-y-4 transition-transform duration-500 ease-in-out transform translate-x-[400px]">
+        <!-- Minimized clock and timer will be moved here by JS -->
+    </div>
+
     <main class="min-h-screen w-full p-4 md:p-6 flex items-center justify-center">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full max-w-7xl">
+        <div id="main-widget-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full max-w-7xl transition-all duration-500 ease-in-out">
 
-            <!-- Clock & Date Widget -->
-            <div id="clock-widget" class="glass-panel non-focus-widget p-4 md:p-6 flex flex-col justify-center items-center md:col-span-2 lg:col-span-2">
-                <div id="time-display-container" class="w-full">
-                     <h1 id="time-display-normal" class="text-5xl sm:text-6xl md:text-8xl font-bold tracking-tight flex items-baseline justify-center">00:00:00</h1>
-                </div>
-                <p id="date-display" class="text-sm text-center md:text-xl mt-2" style="color: var(--text-muted-color);">Thursday, 25 September 2025</p>
-            </div>
-
-            <!-- Timer Widget -->
-            <div id="timer-widget" class="glass-panel widget-in-focus p-4 md:p-6 md:col-span-2 lg:col-span-2">
-                <div class="flex border-b mb-4" style="border-color: rgba(128,128,128, 0.2)">
-                    <button id="countdown-tab" class="timer-tab flex-1 pb-2 text-sm sm:text-base border-b-2 accent-border accent-text font-semibold">Countdown</button>
-                    <button id="pomodoro-tab" class="timer-tab flex-1 pb-2 text-sm sm:text-base border-b-2 border-transparent font-semibold" style="color: var(--text-muted-color);">Pomodoro</button>
-                    <button id="stopwatch-tab" class="timer-tab flex-1 pb-2 text-sm sm:text-base border-b-2 border-transparent font-semibold" style="color: var(--text-muted-color);">Stopwatch</button>
-                </div>
-                <!-- Countdown View -->
-                <div id="countdown-view">
-                     <div class="flex justify-center items-center gap-1 sm:gap-2 md:gap-4 mb-4">
-                        <input id="hours" type="number" min="0" placeholder="HH" class="styled-input w-16 h-16 text-2xl sm:w-20 sm:h-20 sm:text-4xl text-center rounded-lg"><span class="text-2xl sm:text-4xl">:</span>
-                        <input id="minutes" type="number" min="0" max="59" placeholder="MM" class="styled-input w-16 h-16 text-2xl sm:w-20 sm:h-20 sm:text-4xl text-center rounded-lg"><span class="text-2xl sm:text-4xl">:</span>
-                        <input id="seconds" type="number" min="0" max="59" placeholder="SS" class="styled-input w-16 h-16 text-2xl sm:w-20 sm:h-20 sm:text-4xl text-center rounded-lg">
+            <div id="clock-widget-wrapper" class="md:col-span-2 lg:col-span-2 relative">
+                <button class="enlarge-widget-btn absolute top-3 right-3 p-2 rounded-full hover:bg-slate-500/50 transition-colors z-10" title="Enlarge Widget">
+                    <i class="ph-bold ph-arrows-out text-lg"></i>
+                </button>
+                <div id="clock-widget" class="glass-panel p-4 md:p-6 flex flex-col justify-center items-center h-full">
+                    <div id="time-display-container" class="w-full">
+                         <h1 id="time-display-normal" class="text-5xl sm:text-6xl md:text-8xl font-bold tracking-tight flex items-baseline justify-center">00:00:00</h1>
                     </div>
-                    <div class="flex flex-wrap justify-center gap-2">
-                        <button id="start-timer" class="accent-bg accent-bg-hover transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-play"></i> Start</button>
-                        <button id="pause-timer" class="bg-slate-600 hover:bg-slate-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-pause"></i> Pause</button>
-                        <button id="reset-timer" class="bg-rose-600 hover:bg-rose-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-arrow-counter-clockwise"></i> Reset</button>
-                    </div>
-                </div>
-                <!-- Pomodoro View -->
-                <div id="pomodoro-view" class="hidden text-center">
-                    <p id="pomodoro-status" class="text-xl sm:text-2xl font-semibold mb-2 accent-text">Focus</p>
-                    <p id="pomodoro-time" class="text-6xl md:text-7xl font-bold mb-4">25:00</p>
-                     <div class="flex flex-wrap justify-center gap-2">
-                        <button id="pomodoro-start" class="accent-bg accent-bg-hover transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-play"></i> Start</button>
-                         <button id="pomodoro-pause" class="bg-slate-600 hover:bg-slate-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-pause"></i> Pause</button>
-                        <button id="pomodoro-reset" class="bg-rose-600 hover:bg-rose-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-skip-forward"></i> Skip</button>
-                    </div>
-                </div>
-                <!-- Stopwatch View -->
-                <div id="stopwatch-view" class="hidden text-center">
-                    <p id="stopwatch-time" class="text-5xl sm:text-6xl md:text-7xl font-bold font-mono mb-4 tracking-tight">00:00:00</p>
-                    <div class="flex flex-wrap justify-center gap-2">
-                        <button id="stopwatch-start" class="accent-bg accent-bg-hover transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-play"></i> Start</button>
-                        <button id="stopwatch-pause" class="bg-slate-600 hover:bg-slate-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-pause"></i> Pause</button>
-                        <button id="stopwatch-reset" class="bg-rose-600 hover:bg-rose-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-arrow-counter-clockwise"></i> Reset</button>
-                    </div>
+                    <p id="date-display" class="text-sm text-center md:text-xl mt-2" style="color: var(--text-muted-color);">Thursday, 25 September 2025</p>
                 </div>
             </div>
 
-            <!-- Quick Tasks Widget -->
+            <div id="timer-widget-wrapper" class="md:col-span-2 lg:col-span-2 relative">
+                 <button class="enlarge-widget-btn absolute top-3 right-3 p-2 rounded-full hover:bg-slate-500/50 transition-colors z-10" title="Enlarge Widget">
+                    <i class="ph-bold ph-arrows-out text-lg"></i>
+                </button>
+                <div id="timer-widget" class="glass-panel widget-in-focus p-4 md:p-6 h-full">
+                    <div class="flex border-b mb-4" style="border-color: rgba(128,128,128, 0.2)">
+                        <button id="countdown-tab" class="timer-tab flex-1 pb-2 text-sm sm:text-base border-b-2 accent-border accent-text font-semibold">Countdown</button>
+                        <button id="pomodoro-tab" class="timer-tab flex-1 pb-2 text-sm sm:text-base border-b-2 border-transparent font-semibold" style="color: var(--text-muted-color);">Pomodoro</button>
+                        <button id="stopwatch-tab" class="timer-tab flex-1 pb-2 text-sm sm:text-base border-b-2 border-transparent font-semibold" style="color: var(--text-muted-color);">Stopwatch</button>
+                    </div>
+                    <div id="countdown-view">
+                         <div class="flex justify-center items-center gap-1 sm:gap-2 md:gap-4 mb-4">
+                            <input id="hours" type="number" min="0" placeholder="HH" class="styled-input w-16 h-16 text-2xl sm:w-20 sm:h-20 sm:text-4xl text-center rounded-lg"><span class="text-2xl sm:text-4xl">:</span>
+                            <input id="minutes" type="number" min="0" max="59" placeholder="MM" class="styled-input w-16 h-16 text-2xl sm:w-20 sm:h-20 sm:text-4xl text-center rounded-lg"><span class="text-2xl sm:text-4xl">:</span>
+                            <input id="seconds" type="number" min="0" max="59" placeholder="SS" class="styled-input w-16 h-16 text-2xl sm:w-20 sm:h-20 sm:text-4xl text-center rounded-lg">
+                        </div>
+                        <div class="flex flex-wrap justify-center gap-2">
+                            <button id="start-timer" class="accent-bg accent-bg-hover transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-play"></i> Start</button>
+                            <button id="pause-timer" class="bg-slate-600 hover:bg-slate-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-pause"></i> Pause</button>
+                            <button id="reset-timer" class="bg-rose-600 hover:bg-rose-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-arrow-counter-clockwise"></i> Reset</button>
+                        </div>
+                    </div>
+                    <div id="pomodoro-view" class="hidden text-center">
+                        <p id="pomodoro-status" class="text-xl sm:text-2xl font-semibold mb-2 accent-text">Focus</p>
+                        <p id="pomodoro-time" class="text-6xl md:text-7xl font-bold mb-4">25:00</p>
+                         <div class="flex flex-wrap justify-center gap-2">
+                            <button id="pomodoro-start" class="accent-bg accent-bg-hover transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-play"></i> Start</button>
+                             <button id="pomodoro-pause" class="bg-slate-600 hover:bg-slate-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-pause"></i> Pause</button>
+                            <button id="pomodoro-reset" class="bg-rose-600 hover:bg-rose-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-skip-forward"></i> Skip</button>
+                        </div>
+                    </div>
+                    <div id="stopwatch-view" class="hidden text-center">
+                        <p id="stopwatch-time" class="text-5xl sm:text-6xl md:text-7xl font-bold font-mono mb-4 tracking-tight">00:00:00</p>
+                        <div class="flex flex-wrap justify-center gap-2">
+                            <button id="stopwatch-start" class="accent-bg accent-bg-hover transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-play"></i> Start</button>
+                            <button id="stopwatch-pause" class="bg-slate-600 hover:bg-slate-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-pause"></i> Pause</button>
+                            <button id="stopwatch-reset" class="bg-rose-600 hover:bg-rose-700 transition-colors px-4 py-2 sm:px-6 rounded-lg font-semibold flex items-center gap-2"><i class="ph ph-arrow-counter-clockwise"></i> Reset</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="tasks-widget" class="glass-panel widget-in-focus p-4 md:p-6 flex flex-col md:col-span-2 lg:col-span-2 min-h-[250px]">
                 <div class="flex justify-between items-center mb-4 border-b pb-2" style="border-color: rgba(128,128,128, 0.2)">
                     <h2 class="text-lg sm:text-xl font-bold">Quick Tasks</h2>
@@ -221,48 +325,55 @@
                 </div>
                 <ul id="task-list" class="space-y-2 overflow-y-auto flex-grow"></ul>
             </div>
-
-            <!-- ANIMATED Music Player Widget -->
-            <div class="glass-panel non-focus-widget p-4 md:p-6 flex flex-col justify-center items-center text-center relative overflow-hidden">
-                <div id="music-options" class="w-full h-full flex flex-col justify-center items-center text-center transition-transform duration-500 ease-in-out">
-                    <i class="ph-fill ph-music-notes text-4xl sm:text-5xl mb-3 accent-text"></i>
-                    <h3 class="text-base sm:text-lg font-semibold mb-2">Study Music</h3>
-                    <p class="text-xs sm:text-sm flex-grow" style="color: var(--text-muted-color);">Open a playlist in a new tab.</p>
-                    <div class="w-full space-y-2 sm:space-y-3 mt-2">
-                         <a href="https://open.spotify.com/playlist/37i9dQZF1DWWQRwui02bsd" data-service="spotify" class="music-link w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 transition-colors px-4 py-2 rounded-lg font-semibold text-white text-sm sm:text-base">
-                            <i class="ph-fill ph-spotify-logo"></i> Spotify</a>
-                         <a href="https://www.youtube.com/watch?v=jfKfPfyJRdk" data-service="youtube" class="music-link w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 transition-colors px-4 py-2 rounded-lg font-semibold text-white text-sm sm:text-base">
-                            <i class="ph-fill ph-youtube-logo"></i> YouTube</a>
+            
+            <div id="music-widget" class="glass-panel non-focus-widget p-4 md:p-6 md:col-span-1 lg:col-span-1 flex flex-col">
+                <h3 class="text-lg sm:text-xl font-bold mb-4 flex items-center gap-2"><i class="ph-bold ph-music-notes accent-text"></i> Music</h3>
+                <div id="music-player-container" class="flex-grow flex flex-col justify-center">
+                    <div class="flex gap-2">
+                        <input type="text" id="music-url-input" class="styled-input w-full px-3 py-2 rounded-lg text-sm" placeholder="Paste music URL...">
+                        <button id="load-music-btn" class="accent-bg accent-bg-hover transition-colors px-4 py-2 rounded-lg font-semibold"><i class="ph ph-arrow-right"></i></button>
                     </div>
-                </div>
-                <div id="music-playing" class="absolute inset-0 w-full h-full p-6 flex flex-col justify-center items-center text-center bg-slate-800/20 transform translate-y-full transition-transform duration-500 ease-in-out">
-                    <p class="text-lg font-semibold mb-3">Now Playing...</p>
-                    <div class="sound-wave h-10 flex items-center"><span></span><span></span><span></span><span></span></div>
-                    <p id="playing-service" class="text-sm accent-text mt-2"></p>
-                    <button id="music-back-btn" class="mt-4 bg-slate-600 hover:bg-slate-700 text-xs px-3 py-1 rounded-full">Choose Another</button>
                 </div>
             </div>
 
-            <!-- Background Uploader Widget -->
-            <div class="glass-panel non-focus-widget p-4 md:p-6 flex flex-col justify-center items-center text-center">
-                 <i class="ph-fill ph-image text-4xl sm:text-5xl mb-3 accent-text"></i>
-                <h3 class="text-base sm:text-lg font-semibold mb-2">Change BG</h3>
-                <p class="text-xs sm:text-sm flex-grow" style="color: var(--text-muted-color);">Personalize your dashboard.</p>
-                <label for="background-uploader" class="cursor-pointer w-full bg-slate-600 hover:bg-slate-700 transition-colors px-4 py-2 mt-2 rounded-lg font-semibold text-white text-sm sm:text-base">Upload Image</label>
-                <input type="file" id="background-uploader" class="hidden" accept="image/*">
+            <div id="bg-changer-widget" class="glass-panel non-focus-widget p-4 md:p-6 md:col-span-1 lg:col-span-1 flex flex-col justify-between">
+                 <h3 class="text-lg sm:text-xl font-bold mb-4 flex items-center gap-2"><i class="ph-bold ph-image accent-text"></i> Background</h3>
+                 <div class="space-y-2">
+                     <label for="bg-upload-input" class="w-full text-center block bg-slate-600 hover:bg-slate-700 transition-colors p-2 rounded-lg font-semibold cursor-pointer">
+                        Upload Image
+                    </label>
+                    <input type="file" id="bg-upload-input" class="hidden" accept="image/*">
+                    <button id="reset-bg-btn" class="w-full text-center block bg-slate-600 hover:bg-slate-700 transition-colors p-2 rounded-lg font-semibold cursor-pointer">
+                        Reset Default
+                    </button>
+                 </div>
+            </div>
+
+            <div class="glass-panel non-focus-widget tools-widget p-4 md:p-6 md:col-span-2 flex flex-col justify-center text-center">
+                <h3 class="text-lg sm:text-xl font-bold mb-4">Tools</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button id="open-ai-chat-btn" class="bg-slate-600 hover:bg-slate-700 transition-colors p-4 rounded-lg font-semibold flex flex-col items-center gap-2">
+                        <i class="ph-bold ph-chats-circle text-4xl accent-text"></i>
+                        <span>AI Assistant</span>
+                    </button>
+                    <button id="open-doc-viewer-btn" class="bg-slate-600 hover:bg-slate-700 transition-colors p-4 rounded-lg font-semibold flex flex-col items-center gap-2">
+                        <i class="ph-bold ph-file-pdf text-4xl accent-text"></i>
+                        <span>Doc Viewer</span>
+                    </button>
+                </div>
             </div>
 
         </div>
     </main>
-
-    <div id="focus-overlay" class="pointer-events-none fixed inset-0 z-40 bg-black/70 opacity-0"></div>
     
     <button id="exit-focus-btn" class="hidden fixed top-4 right-4 md:top-6 md:right-6 z-50 accent-bg accent-bg-hover px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-semibold text-base md:text-lg flex items-center gap-2" title="Exit Focus Mode">
         <i class="ph ph-x"></i> Exit Focus
     </button>
+    <button id="exit-enlarged-btn" class="hidden fixed top-4 right-4 md:top-6 md:right-6 z-[60] accent-bg accent-bg-hover px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-semibold text-base md:text-lg flex items-center gap-2" title="Go Back">
+        <i class="ph ph-arrow-left"></i> Go Back
+    </button>
 
 
-    <!-- Settings & Fullscreen Buttons -->
     <div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 md:gap-3 bottom-right-controls">
         <button id="focus-mode-btn" class="glass-panel p-2 md:p-3 rounded-full hover:bg-slate-500/50 transition-colors" title="Toggle Focus Mode">
             <i class="ph-bold ph-crosshair text-xl md:text-2xl block leading-none"></i>
@@ -275,15 +386,13 @@
         </button>
     </div>
 
-    <!-- Settings Panel -->
-    <div id="settings-panel" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div id="settings-panel" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-sm sm:max-w-md p-6 rounded-2xl">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold">Settings</h2>
                 <button id="close-settings-btn" class="p-1 rounded-full hover:bg-slate-500/50"><i class="ph-bold ph-x text-xl"></i></button>
             </div>
             <div class="space-y-6">
-                <!-- Background Theme -->
                 <div>
                     <p class="font-semibold mb-3">Theme</p>
                     <div class="grid grid-cols-3 gap-3">
@@ -292,7 +401,6 @@
                         <button class="theme-btn border-2 p-2 rounded-lg font-semibold" data-theme="default-image">Image</button>
                     </div>
                 </div>
-                <!-- Clock Format -->
                 <div class="flex items-center justify-between">
                     <label for="clock-format-toggle" class="font-semibold">24-Hour Clock</label>
                     <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
@@ -300,8 +408,7 @@
                         <label for="clock-format-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
                     </div>
                 </div>
-                 <!-- Clock Animation -->
-                <div class="flex items-center justify-between">
+                 <div class="flex items-center justify-between">
                     <label for="clock-animation-select" class="font-semibold">Clock Style</label>
                     <select id="clock-animation-select" class="styled-input rounded-lg px-3 py-1.5">
                         <option value="normal">Normal</option>
@@ -309,8 +416,7 @@
                         <option value="flip">Flip</option>
                     </select>
                 </div>
-                 <!-- Timer Sound -->
-                <div class="flex items-center justify-between">
+                 <div class="flex items-center justify-between">
                     <label for="timer-sound-select" class="font-semibold">Timer Alert Sound</label>
                     <select id="timer-sound-select" class="styled-input rounded-lg px-3 py-1.5">
                         <option value="C5">Default</option>
@@ -318,8 +424,7 @@
                         <option value="A4">Melody</option>
                     </select>
                 </div>
-                 <!-- Accent Color -->
-                 <div class="flex items-center justify-between">
+                  <div class="flex items-center justify-between">
                     <p class="font-semibold">Accent Color</p>
                     <div class="flex gap-3">
                         <button class="color-swatch w-8 h-8 rounded-full bg-cyan-500" data-color="cyan"></button>
@@ -327,7 +432,6 @@
                         <button class="color-swatch w-8 h-8 rounded-full bg-lime-500" data-color="lime"></button>
                     </div>
                 </div>
-                <!-- Stopwatch Milliseconds -->
                 <div class="flex items-center justify-between">
                     <label for="stopwatch-ms-toggle" class="font-semibold">Show Milliseconds</label>
                     <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
@@ -339,8 +443,7 @@
         </div>
     </div>
     
-    <!-- Share Modal -->
-    <div id="share-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div id="share-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-md p-6 rounded-2xl text-center">
              <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-bold">Share Your Tasks</h2>
@@ -355,10 +458,56 @@
         </div>
     </div>
 
+    <div id="ai-chat-panel" class="hidden fixed top-0 left-0 h-full w-full md:w-3/4 z-[60] transform -translate-x-full transition-transform duration-500 ease-in-out">
+        <div class="glass-panel w-full h-full flex flex-col p-4 md:p-6 rounded-none md:rounded-r-2xl md:rounded-l-none">
+            <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                <h2 class="text-2xl font-bold flex items-center gap-2"><i class="ph-bold ph-chats-circle accent-text"></i> AI Assistant</h2>
+                <button id="close-ai-chat-btn" class="p-1 rounded-full hover:bg-slate-500/50"><i class="ph-bold ph-x text-xl"></i></button>
+            </div>
+            <div id="ai-chat-messages" class="flex-grow bg-black/20 rounded-lg p-4 mb-4 overflow-y-auto flex flex-col gap-4">
+            </div>
+            <div class="flex-shrink-0 mb-3">
+                <p class="text-sm mb-2" style="color: var(--text-muted-color);">Select AI Mode:</p>
+                <div class="flex flex-wrap gap-2">
+                    <button class="ai-mode-btn accent-bg" data-mode="General">General</button>
+                    <button class="ai-mode-btn" data-mode="Research">Research</button>
+                    <button class="ai-mode-btn" data-mode="Study">Study Helper</button>
+                    <button class="ai-mode-btn" data-mode="Coding">Coding Assistant</button>
+                    <button class="ai-mode-btn" data-mode="DoubtSolving">Doubt Solving</button>
+                </div>
+            </div>
+            <div class="flex gap-2 flex-shrink-0">
+                <input id="ai-chat-input" type="text" placeholder="Ask anything..." class="styled-input w-full p-3 rounded-lg">
+                <button id="ai-chat-send" class="accent-bg accent-bg-hover p-3 rounded-lg"><i class="ph-bold ph-paper-plane-tilt text-2xl"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="doc-viewer-panel" class="hidden fixed top-0 left-0 h-full w-full md:w-3/4 z-[60] transform -translate-x-full transition-transform duration-500 ease-in-out">
+        <div class="glass-panel w-full h-full flex flex-col p-4 md:p-6 rounded-none md:rounded-r-2xl md:rounded-l-none">
+            <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                <h2 class="text-2xl font-bold flex items-center gap-2"><i class="ph-bold ph-file-pdf accent-text"></i> Document Viewer</h2>
+                <div class="flex items-center gap-4">
+                    <button id="change-file-btn" class="hidden accent-bg accent-bg-hover text-sm px-3 py-1.5 rounded-lg font-semibold">Change File</button>
+                    <button id="close-doc-viewer-btn" class="p-1 rounded-full hover:bg-slate-500/50"><i class="ph-bold ph-x text-xl"></i></button>
+                </div>
+            </div>
+            <div id="viewer-container" class="flex-grow bg-black/20 rounded-lg p-4 overflow-y-auto">
+                <div class="h-full flex flex-col items-center justify-center text-center">
+                    <i class="ph-bold ph-file-arrow-up text-6xl mb-4" style="color: var(--text-muted-color);"></i>
+                    <p style="color: var(--text-muted-color);">Select a PDF or Image file to view.</p>
+                    <label for="file-viewer-input" class="mt-6 cursor-pointer accent-bg accent-bg-hover px-6 py-3 rounded-lg font-semibold">Select File</label>
+                    <input type="file" id="file-viewer-input" class="hidden" accept="application/pdf,image/*">
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- GLOBAL SETTINGS ---
+            // --- GLOBAL SETTINGS & STATE ---
+            let currentAiMode = 'General';
             const settings = {
                 is24Hour: localStorage.getItem('studi-is24Hour') === 'true',
                 timerSound: localStorage.getItem('studi-timerSound') || 'C5',
@@ -393,7 +542,14 @@
 
                 // Update active button state
                 document.querySelectorAll('.theme-btn').forEach(btn => {
-                    const isActive = btn.dataset.theme === settings.theme;
+                    const isDefaultImage = settings.theme === 'default-image' || settings.theme.startsWith('data:image');
+                    let isActive;
+                    if (btn.dataset.theme === 'default-image') {
+                        isActive = isDefaultImage;
+                    } else {
+                        isActive = btn.dataset.theme === settings.theme;
+                    }
+
                     btn.classList.toggle('accent-bg', isActive);
                     btn.classList.toggle('accent-border', isActive);
                     btn.classList.toggle('border-transparent', !isActive);
@@ -417,12 +573,10 @@
                 // Apply selects
                 document.getElementById('clock-animation-select').value = settings.clockStyle;
                 document.getElementById('timer-sound-select').value = settings.timerSound;
-
+                
                 // Apply theme
                 applyTheme();
-
-                // Apply focus mode visuals
-                toggleFocusModeVisuals(settings.focusMode);
+                
                 // Setup clock style
                 setupClockView(settings.clockStyle);
             }
@@ -610,45 +764,21 @@
             // Stopwatch Logic
             const stopwatchTime = document.getElementById('stopwatch-time');
             let stopwatchInterval, stopwatchStartTime, stopwatchElapsedTime = 0, stopwatchIsRunning = false;
-           function updateStopwatchDisplay() {
-    const totalMs = stopwatchElapsedTime;
-    const hours = Math.floor(totalMs / 3600000);
-    const minutes = Math.floor((totalMs % 3600000) / 60000);
-    const seconds = Math.floor((totalMs % 60000) / 1000);
-
-    let timeString = 
-        `${hours.toString().padStart(2, '0')}:` +
-        `${minutes.toString().padStart(2, '0')}:` +
-        `${seconds.toString().padStart(2, '0')}`;
-
-    // This part brings back the optional milliseconds using the toggle
-    if (settings.showMilliseconds) {
-        const centiseconds = Math.floor((totalMs % 1000) / 10);
-        timeString += `:${centiseconds.toString().padStart(2, '0')}`;
-    }
-
-    stopwatchTime.textContent = timeString;
-}
-            document.getElementById('stopwatch-start').addEventListener('click', () => {
-                if (!stopwatchIsRunning) {
-                    stopwatchIsRunning = true;
-                    stopwatchStartTime = Date.now() - stopwatchElapsedTime;
-                    stopwatchInterval = setInterval(() => {
-                        stopwatchElapsedTime = Date.now() - stopwatchStartTime;
-                        updateStopwatchDisplay();
-                    }, 10);
+            function updateStopwatchDisplay() {
+                const totalMs = stopwatchElapsedTime;
+                const hours = Math.floor(totalMs / 3600000);
+                const minutes = Math.floor((totalMs % 3600000) / 60000);
+                const seconds = Math.floor((totalMs % 60000) / 1000);
+                let timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                if (settings.showMilliseconds) {
+                    const centiseconds = Math.floor((totalMs % 1000) / 10);
+                    timeString += `:${centiseconds.toString().padStart(2, '0')}`;
                 }
-            });
-            document.getElementById('stopwatch-pause').addEventListener('click', () => {
-                stopwatchIsRunning = false;
-                clearInterval(stopwatchInterval);
-            });
-            document.getElementById('stopwatch-reset').addEventListener('click', () => {
-                stopwatchIsRunning = false;
-                clearInterval(stopwatchInterval);
-                stopwatchElapsedTime = 0;
-                updateStopwatchDisplay();
-            });
+                stopwatchTime.textContent = timeString;
+            }
+            document.getElementById('stopwatch-start').addEventListener('click', () => { if (!stopwatchIsRunning) { stopwatchIsRunning = true; stopwatchStartTime = Date.now() - stopwatchElapsedTime; stopwatchInterval = setInterval(() => { stopwatchElapsedTime = Date.now() - stopwatchStartTime; updateStopwatchDisplay(); }, 10); } });
+            document.getElementById('stopwatch-pause').addEventListener('click', () => { stopwatchIsRunning = false; clearInterval(stopwatchInterval); });
+            document.getElementById('stopwatch-reset').addEventListener('click', () => { stopwatchIsRunning = false; clearInterval(stopwatchInterval); stopwatchElapsedTime = 0; updateStopwatchDisplay(); });
             updateStopwatchDisplay();
             
             // --- QUICK TASKS WIDGET ---
@@ -665,7 +795,7 @@
             let qrCodeInstance = null;
             document.getElementById('share-tasks-btn').addEventListener('click', () => {
                 const tasks = [...taskList.querySelectorAll('li span')].map(span => span.textContent);
-                if (tasks.length === 0) { return; } // Silently fail if no tasks
+                if (tasks.length === 0) { return; } 
                 const encodedTasks = encodeURIComponent(JSON.stringify(tasks));
                 const url = `${window.location.origin}${window.location.pathname}?tasks=${encodedTasks}`;
                 shareLinkInput.value = url;
@@ -701,36 +831,7 @@
                     console.error('Failed to parse tasks from URL', e);
                 }
             }
-
-
-            // --- ANIMATED MUSIC WIDGET ---
-            const musicOptions = document.getElementById('music-options'); const musicPlaying = document.getElementById('music-playing'); const musicLinks = document.querySelectorAll('.music-link'); const musicBackButton = document.getElementById('music-back-btn'); const playingServiceText = document.getElementById('playing-service');
-            musicLinks.forEach(link => {
-                link.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    const url = this.href; const service = this.dataset.service; window.open(url, '_blank');
-                    playingServiceText.textContent = `on ${service.charAt(0).toUpperCase() + service.slice(1)}`;
-                    musicOptions.style.transform = 'translateY(-100%)'; musicOptions.style.opacity = '0';
-                    musicPlaying.style.transform = 'translateY(0)';
-                });
-            });
-            musicBackButton.addEventListener('click', () => { musicOptions.style.transform = 'translateY(0)'; musicOptions.style.opacity = '1'; musicPlaying.style.transform = 'translateY(100%)'; });
-
-            // --- BACKGROUND UPLOADER WIDGET ---
-            const backgroundUploader = document.getElementById('background-uploader');
-            backgroundUploader.addEventListener('change', (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        settings.theme = e.target.result;
-                        localStorage.setItem('studi-theme', settings.theme);
-                        applyTheme();
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-        
+            
             // --- FULLSCREEN TOGGLE ---
             const fullscreenBtn = document.getElementById('fullscreen-btn'); const fullscreenIcon = document.getElementById('fullscreen-icon');
             function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(err => { console.error(`Error: ${err.message}`); }); } else { if (document.exitFullscreen) { document.exitFullscreen(); } } }
@@ -747,70 +848,278 @@
             closeSettingsBtn.addEventListener('click', () => settingsPanel.classList.add('hidden'));
 
             // Theme Change
-            document.querySelectorAll('.theme-btn').forEach(button => {
-                button.addEventListener('click', () => {
-                    settings.theme = button.dataset.theme;
-                    localStorage.setItem('studi-theme', settings.theme);
-                    applyTheme();
-                });
-            });
-
+            document.querySelectorAll('.theme-btn').forEach(button => { button.addEventListener('click', () => { settings.theme = button.dataset.theme; localStorage.setItem('studi-theme', settings.theme); applyTheme(); }); });
             // Clock Format Change
-            document.getElementById('clock-format-toggle').addEventListener('change', (e) => {
-                settings.is24Hour = e.target.checked;
-                localStorage.setItem('studi-is24Hour', settings.is24Hour);
-            });
+            document.getElementById('clock-format-toggle').addEventListener('change', (e) => { settings.is24Hour = e.target.checked; localStorage.setItem('studi-is24Hour', settings.is24Hour); });
              // Sound Change
-            document.getElementById('timer-sound-select').addEventListener('change', (e) => {
-                settings.timerSound = e.target.value;
-                localStorage.setItem('studi-timerSound', settings.timerSound);
-                if (synth) synth.triggerAttackRelease(settings.timerSound, "0.5"); // Preview sound
-            });
-             // Color Change
-            document.querySelectorAll('.color-swatch').forEach(button => {
-                button.addEventListener('click', () => {
-                    settings.accentColor = button.dataset.color;
-                    localStorage.setItem('studi-accentColor', settings.accentColor);
-                    applySettings();
-                });
-            });
+            document.getElementById('timer-sound-select').addEventListener('change', (e) => { settings.timerSound = e.target.value; localStorage.setItem('studi-timerSound', settings.timerSound); if (synth) synth.triggerAttackRelease(settings.timerSound, "0.5"); });
+              // Color Change
+            document.querySelectorAll('.color-swatch').forEach(button => { button.addEventListener('click', () => { settings.accentColor = button.dataset.color; localStorage.setItem('studi-accentColor', settings.accentColor); applySettings(); }); });
             // Clock Style Change
-            document.getElementById('clock-animation-select').addEventListener('change', (e) => {
-                settings.clockStyle = e.target.value;
-                localStorage.setItem('studi-clockStyle', settings.clockStyle);
-                setupClockView(settings.clockStyle);
-            });
+            document.getElementById('clock-animation-select').addEventListener('change', (e) => { settings.clockStyle = e.target.value; localStorage.setItem('studi-clockStyle', settings.clockStyle); setupClockView(settings.clockStyle); });
             // Stopwatch Milliseconds Change
-            document.getElementById('stopwatch-ms-toggle').addEventListener('change', (e) => {
-                settings.showMilliseconds = e.target.checked;
-                localStorage.setItem('studi-showMilliseconds', settings.showMilliseconds);
-                updateStopwatchDisplay();
-            });
-            
-            // --- FOCUS MODE LOGIC ---
+            document.getElementById('stopwatch-ms-toggle').addEventListener('change', (e) => { settings.showMilliseconds = e.target.checked; localStorage.setItem('studi-showMilliseconds', settings.showMilliseconds); updateStopwatchDisplay(); });
+
+            // --- FOCUS & ENLARGED MODE LOGIC ---
             const focusModeBtn = document.getElementById('focus-mode-btn');
             const exitFocusBtn = document.getElementById('exit-focus-btn');
-            
-            function toggleFocusModeVisuals(isActive) {
-                document.body.classList.toggle('focus-active', isActive);
-                if (isActive) {
-                    exitFocusBtn.classList.remove('hidden');
-                } else {
-                    exitFocusBtn.classList.add('hidden');
-                }
-            }
+            const enlargeWidgetBtns = document.querySelectorAll('.enlarge-widget-btn');
+            const exitEnlargedBtn = document.getElementById('exit-enlarged-btn');
             
             function handleFocusToggle() {
                 settings.focusMode = !settings.focusMode;
-                toggleFocusModeVisuals(settings.focusMode);
+                document.body.classList.toggle('focus-active', settings.focusMode);
+                exitFocusBtn.classList.toggle('hidden', !settings.focusMode);
             }
+
+            enlargeWidgetBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const wrapper = e.currentTarget.closest('.md\\:col-span-2');
+                    if (wrapper) {
+                        document.body.classList.add('widget-enlarged');
+                        wrapper.classList.add('widget-is-enlarged');
+                        exitEnlargedBtn.classList.remove('hidden');
+                    }
+                });
+            });
+
+            exitEnlargedBtn.addEventListener('click', () => {
+                document.body.classList.remove('widget-enlarged');
+                const enlarged = document.querySelector('.widget-is-enlarged');
+                if (enlarged) {
+                    enlarged.classList.remove('widget-is-enlarged');
+                }
+                exitEnlargedBtn.classList.add('hidden');
+            });
 
             focusModeBtn.addEventListener('click', handleFocusToggle);
             exitFocusBtn.addEventListener('click', handleFocusToggle);
+            
+            // --- AI & DOCS FEATURE LOGIC ---
+            const aiChatPanel = document.getElementById('ai-chat-panel');
+            const docViewerPanel = document.getElementById('doc-viewer-panel');
+            const clockWidget = document.getElementById('clock-widget');
+            const timerWidget = document.getElementById('timer-widget');
+            const clockWidgetWrapper = document.getElementById('clock-widget-wrapper');
+            const timerWidgetWrapper = document.getElementById('timer-widget-wrapper');
+            const sideWidgetContainer = document.getElementById('side-widget-container');
 
-            // Apply initial settings on load
+            function openSidePanel(panel) {
+                document.body.classList.add('panel-open-shift');
+                sideWidgetContainer.appendChild(clockWidget);
+                sideWidgetContainer.appendChild(timerWidget);
+                
+                sideWidgetContainer.classList.remove('translate-x-[400px]');
+                panel.classList.remove('hidden');
+                setTimeout(() => {
+                    panel.classList.remove('-translate-x-full');
+                }, 10); 
+            }
+
+            function closeSidePanel(panel) {
+                document.body.classList.remove('panel-open-shift');
+                
+                sideWidgetContainer.classList.add('translate-x-[400px]');
+                panel.classList.add('-translate-x-full');
+                
+                setTimeout(() => {
+                    panel.classList.add('hidden');
+                    clockWidgetWrapper.appendChild(clockWidget);
+                    timerWidgetWrapper.appendChild(timerWidget);
+
+                    if (panel.id === 'doc-viewer-panel') {
+                        document.getElementById('change-file-btn').classList.add('hidden');
+                    }
+                }, 500); // Match transition duration
+            }
+
+            document.getElementById('open-ai-chat-btn').addEventListener('click', () => openSidePanel(aiChatPanel));
+            document.getElementById('close-ai-chat-btn').addEventListener('click', () => closeSidePanel(aiChatPanel));
+            document.getElementById('open-doc-viewer-btn').addEventListener('click', () => openSidePanel(docViewerPanel));
+            document.getElementById('close-doc-viewer-btn').addEventListener('click', () => closeSidePanel(docViewerPanel));
+
+            // AI Chat
+            const aiChatInput = document.getElementById('ai-chat-input');
+            const aiChatSendBtn = document.getElementById('ai-chat-send');
+            const messagesContainer = document.getElementById('ai-chat-messages');
+            const aiModeBtns = document.querySelectorAll('.ai-mode-btn');
+
+            aiModeBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    aiModeBtns.forEach(b => b.classList.remove('accent-bg'));
+                    btn.classList.add('accent-bg');
+                    currentAiMode = btn.dataset.mode;
+                });
+            });
+
+            async function handleAIChat() {
+                const message = aiChatInput.value.trim();
+                if(!message) return;
+
+                // IMPORTANT: Replace with your actual Gemini API Key
+                const GEMINI_API_KEY = "AIzaSyAf0PQug-lFt2-rGHCxHdeMIIsx4xMBH-0"; 
+
+                messagesContainer.innerHTML += `<div class="w-full flex justify-end"><p class="chat-bubble chat-bubble-user">${message}</p></div>`;
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                aiChatInput.value = '';
+                
+                if (GEMINI_API_KEY === "") {
+                     messagesContainer.innerHTML += `<div class="w-full flex"><p class="chat-bubble chat-bubble-ai">Please add your Gemini API key to the script to enable the AI Assistant.</p></div>`;
+                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                     return;
+                }
+
+                const systemPrompts = {
+                    General: "You are a helpful general assistant.",
+                    Research: "You are a meticulous research assistant. Provide detailed and well-structured information.",
+                    Study: "You are a friendly study helper. Explain concepts clearly and simply, as if to a student.",
+                    Coding: "You are an expert programmer. Provide clean, efficient code and clear explanations.",
+                    DoubtSolving: "You are a doubt-solving expert. Directly address the user's question, clarify any misconceptions, and provide a concise and accurate answer."
+                };
+
+                const finalMessage = `${systemPrompts[currentAiMode]} Please answer the following query: ${message}`;
+                
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: finalMessage }] }] })
+                    });
+                    if(!response.ok) throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                    const data = await response.json();
+                    const aiMessage = data.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
+                    messagesContainer.innerHTML += `<div class="w-full flex"><p class="chat-bubble chat-bubble-ai">${aiMessage}</p></div>`;
+                } catch(error) {
+                    messagesContainer.innerHTML += `<div class="w-full flex"><p class="chat-bubble chat-bubble-ai">Sorry, there was an error: ${error.message}</p></div>`;
+                } finally {
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            }
+
+            aiChatSendBtn.addEventListener('click', handleAIChat);
+            aiChatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') handleAIChat() });
+
+            // Document Viewer
+            const fileViewerInput = document.getElementById('file-viewer-input');
+            const changeFileBtn = document.getElementById('change-file-btn');
+            fileViewerInput.addEventListener('change', handleFileSelect);
+            changeFileBtn.addEventListener('click', () => fileViewerInput.click());
+
+            function handleFileSelect(event) {
+                const file = event.target.files[0];
+                const viewerContainer = document.getElementById('viewer-container');
+                if (!file) return;
+
+                viewerContainer.innerHTML = `<div class="h-full flex items-center justify-center text-center"><i class="ph-bold ph-spinner-gap text-6xl animate-spin"></i><p class="mt-4">Loading...</p></div>`;
+                
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => { 
+                        viewerContainer.innerHTML = `<img src="${e.target.result}" class="max-w-full h-full object-contain mx-auto">`; 
+                        changeFileBtn.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                } else if (file.type === 'application/pdf') {
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        try {
+                            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;
+                            const pdf = await pdfjsLib.getDocument({ data: e.target.result }).promise;
+                            viewerContainer.innerHTML = '';
+                            for (let i = 1; i <= pdf.numPages; i++) {
+                                const page = await pdf.getPage(i);
+                                const viewport = page.getViewport({ scale: 1.5 });
+                                const canvas = document.createElement('canvas');
+                                const context = canvas.getContext('2d');
+                                canvas.height = viewport.height;
+                                canvas.width = viewport.width;
+                                await page.render({ canvasContext: context, viewport: viewport }).promise;
+                                viewerContainer.appendChild(canvas);
+                            }
+                            changeFileBtn.classList.remove('hidden');
+                        } catch (pdfError) {
+                            viewerContainer.innerHTML = `<p class="text-rose-400">Error loading PDF: ${pdfError.message}</p>`;
+                            changeFileBtn.classList.remove('hidden');
+                        }
+                    };
+                    reader.readAsArrayBuffer(file);
+                }
+            }
+            
+            // --- MUSIC WIDGET LOGIC ---
+            function setupMusicWidget() {
+                const musicPlayerContainer = document.getElementById('music-player-container');
+                const loadMusicBtn = document.getElementById('load-music-btn');
+                const musicUrlInput = document.getElementById('music-url-input');
+
+                if (loadMusicBtn) loadMusicBtn.addEventListener('click', loadMusic);
+                if (musicUrlInput) musicUrlInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') loadMusic(); });
+            }
+
+            function loadMusic() {
+                const musicPlayerContainer = document.getElementById('music-player-container');
+                const musicUrlInput = document.getElementById('music-url-input');
+                const url = musicUrlInput.value.trim();
+                if (!url) return;
+
+                let embedUrl = '';
+                if (url.includes('open.spotify.com')) {
+                    const trackId = url.split('/track/')[1]?.split('?')[0];
+                    if(trackId) embedUrl = `https://open.spotify.com/embed/track/${trackId}`;
+                } else if (url.includes('music.youtube.com/watch?v=')) {
+                    const videoId = new URL(url).searchParams.get('v');
+                    if(videoId) embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                } else if (url.includes('youtube.com/watch?v=') || url.includes('youtu.be/')) {
+                    const videoId = url.includes('youtu.be/') 
+                        ? url.split('youtu.be/')[1].split('?')[0] 
+                        : new URL(url).searchParams.get('v');
+                    if(videoId) embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                }
+
+                if (embedUrl) {
+                    musicPlayerContainer.innerHTML = `
+                        <iframe style="border-radius:12px" src="${embedUrl}" width="100%" height="80" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                        <button id="reset-music-btn" class="mt-2 w-full bg-slate-600 hover:bg-slate-700 p-2 rounded-lg font-semibold text-sm">Change Music</button>
+                    `;
+                    document.getElementById('reset-music-btn').addEventListener('click', () => {
+                         musicPlayerContainer.innerHTML = `
+                            <div class="flex gap-2">
+                                <input type="text" id="music-url-input" class="styled-input w-full px-3 py-2 rounded-lg text-sm" placeholder="Paste music URL...">
+                                <button id="load-music-btn" class="accent-bg accent-bg-hover transition-colors px-4 py-2 rounded-lg font-semibold"><i class="ph ph-arrow-right"></i></button>
+                            </div>`;
+                        setupMusicWidget();
+                    });
+                } else {
+                    musicUrlInput.value = 'Invalid URL';
+                    setTimeout(() => { musicUrlInput.value = ''; }, 2000);
+                }
+            }
+            
+            // --- BG CHANGER BUTTON LOGIC ---
+            document.getElementById('bg-upload-input').addEventListener('change', (e) => { 
+                const file = e.target.files[0]; 
+                if (!file) return; 
+                const reader = new FileReader(); 
+                reader.onload = (event) => { 
+                    const imageDataUrl = event.target.result; 
+                    settings.theme = imageDataUrl; 
+                    localStorage.setItem('studi-theme', imageDataUrl); 
+                    applyTheme(); 
+                }; 
+                reader.readAsDataURL(file); 
+            });
+            document.getElementById('reset-bg-btn').addEventListener('click', () => {
+                settings.theme = 'default-image';
+                localStorage.setItem('studi-theme', 'default-image');
+                applyTheme();
+            });
+
+
+            // --- INITIALIZE ---
+            setupMusicWidget();
             applySettings();
         });
     </script>
 </body>
 </html>
+
