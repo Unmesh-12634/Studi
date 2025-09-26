@@ -610,17 +610,25 @@
             // Stopwatch Logic
             const stopwatchTime = document.getElementById('stopwatch-time');
             let stopwatchInterval, stopwatchStartTime, stopwatchElapsedTime = 0, stopwatchIsRunning = false;
-            function updateStopwatchDisplay() {
-                const totalMs = stopwatchElapsedTime;
-                const minutes = Math.floor((totalMs % 3600000) / 60000);
-                const seconds = Math.floor((totalMs % 60000) / 1000);
-                let timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                if (settings.showMilliseconds) {
-                    const centiseconds = Math.floor((totalMs % 1000) / 10);
-                    timeString += `:${centiseconds.toString().padStart(2, '0')}`;
-                }
-                stopwatchTime.textContent = timeString;
-            }
+           function updateStopwatchDisplay() {
+    const totalMs = stopwatchElapsedTime;
+    const hours = Math.floor(totalMs / 3600000);
+    const minutes = Math.floor((totalMs % 3600000) / 60000);
+    const seconds = Math.floor((totalMs % 60000) / 1000);
+
+    let timeString = 
+        `${hours.toString().padStart(2, '0')}:` +
+        `${minutes.toString().padStart(2, '0')}:` +
+        `${seconds.toString().padStart(2, '0')}`;
+
+    // This part brings back the optional milliseconds using the toggle
+    if (settings.showMilliseconds) {
+        const centiseconds = Math.floor((totalMs % 1000) / 10);
+        timeString += `:${centiseconds.toString().padStart(2, '0')}`;
+    }
+
+    stopwatchTime.textContent = timeString;
+}
             document.getElementById('stopwatch-start').addEventListener('click', () => {
                 if (!stopwatchIsRunning) {
                     stopwatchIsRunning = true;
